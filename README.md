@@ -1,6 +1,26 @@
 # WASM + Scheme
 
-почему racket?
+;; Core Scheme + Sugar
+
+;;    =[desugar]=>
+
+;; Core Scheme 
+
+;;    =[mutable variable elimination]=>
+
+;; Intermediate Scheme (1) 
+
+;;    =[closure conversion]=>
+
+;; Intermediate Scheme (2) 
+
+;;    =[code emission]=>
+
+;; C
+
+
+
+## Почему racket?
 
 - выбирал между Chiken, Guile, Racket
 - прочел [ветку](https://www.reddit.com/r/lisp/comments/b4gr2x/which_scheme_interpreter_should_i_use/) на реддите.
