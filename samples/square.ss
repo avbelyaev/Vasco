@@ -1,4 +1,5 @@
 #lang racket
 
-(define sq
-  (lambda (x) (* x x)))
+
+(define (my-abs x)
+  (if (< x 0) (-x) (x)))

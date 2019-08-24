@@ -8,6 +8,9 @@
     ((= x 0) 0)
     (else 1)))
 
+(define sq
+  (lambda (x) (* x x)))
+
 
 (define (fact n)
   (if (= n 0)
