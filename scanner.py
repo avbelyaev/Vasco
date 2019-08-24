@@ -36,15 +36,18 @@ class Scanner:
             .split(' ')
         program = list(filter(lambda s: '' != s, program))
         # swutch quotes to be able to print them without escaping
-        program = str(program) \
+        program = str(program)\
             .replace("'", '"') \
+            .replace('"""', '"quot"')\
             .strip()
 
         # remove outermost brackets from `str(list)`
         program = program[1: len(program) - 1]
         program = program\
-            .replace('"(",', '[')\
-            .replace(', ")"', ']')
+            .replace('"("', '[')\
+            .replace('")"', ']')\
+            .replace('[,', '[')\
+            .replace(', ]', ']')
         # add some magic and AST is ready
         evaluated = eval(program)
         return evaluated
@@ -78,7 +81,7 @@ def main():
         content = f.readlines()
 
     scanner = Scanner(content)
-    scanner.scan()
+    # scanner.scan()
 
 
 if __name__ == '__main__':
