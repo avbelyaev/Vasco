@@ -7,11 +7,20 @@ SAMPLE_SQUARE = 'samples/square.ss'
 class TokenType(Enum):
     ERROR = -1
     EOP = 0
-    KEYWORD = 1
-    BRACKET = 2
-    OPERATOR = 3
-    NUMBER = 4
-    WHITESPACE = 5
+    VAR = 1
+    KEYWD = 2
+    OP = 3
+    NUM = 4
+    IDENT = 5
+
+
+KEYWORDS = [
+    'define', 'if', 'cond', 'else', 'lambda', 'car', 'cdr'
+]
+
+OPERATORS = [
+    '+', '-', '*', '>', '>=', '<', '<='
+]
 
 
 class Token:
@@ -19,12 +28,41 @@ class Token:
         self.type = tok_type
         self.value = val
 
+    def __repr__(self):
+        return self.__str__()
 
-class Scanner:
+    def __str__(self):
+        return f'({self.type._name_}: {self.value})'
+
+
+class KeywordToken(Token):
+    def __init__(self, val: str):
+        super().__init__(TokenType.KEYWD, val)
+
+
+class OperatorToken(Token):
+    def __init__(self, val: str):
+        super().__init__(TokenType.OP, val)
+
+
+class VarToken(Token):
+    def __init__(self, val: str):
+        super().__init__(TokenType.VAR, val)
+
+
+class IdentToken(Token):
+    def __init__(self, val: str):
+        super().__init__(TokenType.IDENT, val)
+
+
+
+
+
+class Lexer:
     def __init__(self, program_lines: list):
         self.prog_header = None
         self.program = self._preprocess_program(program_lines)
-        self.ast = self._eval_list_structure(self.program)
+        self.structure = self._eval_list_structure(self.program)
 
     def _eval_list_structure(self, program: str) -> list:
         program = ' '.join(program.split())
@@ -62,13 +100,26 @@ class Scanner:
         return program
 
     def determine_token(self, item: str) -> Token:
-        pass
+        if item in KEYWORDS:
+            return KeywordToken(item)
 
-    def scan(self, program_items: list) -> list:
+        elif item in OPERATORS:
+            return OperatorToken(item)
+
+        elif item.isdigit():
+            return VarToken(item)
+
+        else:
+            return IdentToken(item)
+
+    def scan(self) -> list:
+        return self._scan(self.structure)
+
+    def _scan(self, program_items: list) -> list:
         tokens = []
         for item in program_items:
             if list == type(item):
-                tokens.append(self.scan(item))
+                tokens.append(self._scan(item))
             else:
                 tokens.append(self.determine_token(item))
 
@@ -80,8 +131,9 @@ def main():
     with open(SAMPLE_SQUARE, 'r') as f:
         content = f.readlines()
 
-    scanner = Scanner(content)
-    # scanner.scan()
+    lexer = Lexer(content)
+    tokens = lexer.scan()
+    print(tokens)
 
 
 if __name__ == '__main__':
