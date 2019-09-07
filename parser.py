@@ -1,6 +1,6 @@
 from typing import List, Union
 
-from lexer import SAMPLE_SQUARE, Lexer, Token
+from lexer import FILE_SQUARE, Lexer, Token
 
 
 # NODE IS A LIST !!!!!
@@ -78,7 +78,7 @@ def _expression(expr: list) -> Node:
 
 def main():
     content = None
-    with open(SAMPLE_SQUARE, 'r') as f:
+    with open(FILE_SQUARE, 'r') as f:
         content = f.readlines()
 
     lexer = Lexer(content)

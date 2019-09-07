@@ -1,7 +1,9 @@
 import re
 from enum import Enum
 
-SAMPLE_SQUARE = 'samples/square.ss'
+from ply import lex
+
+FILE_SQUARE = 'samples/square.ss'
 
 
 class TokenType(Enum):
@@ -126,14 +128,57 @@ class Lexer:
         return tokens
 
 
-def main():
-    content = None
-    with open(SAMPLE_SQUARE, 'r') as f:
-        content = f.readlines()
+tokens = (
+    'LEFTPAR', 'RIGHTPAR', 'NUMBER', 'EOL', 'WS', 'IDENT'
+)
 
-    lexer = Lexer(content)
-    tokens = lexer.scan()
-    print(tokens)
+t_LEFTPAR = r'\('
+t_RIGHTPAR = r'\)'
+t_EOL = r'\n'
+t_WS = r'\s+'
+
+
+def t_IDENT(t):
+    r'[a-z0-9!$%&*\-./:<=>?@^_~]{1}[+\-a-z0-9!$%&*+\-./:<=>?@^_~]*'
+    return t
+
+
+def t_NUMBER(t):
+    r'[-]?\d+'
+    t.value = int(t.value)
+    return t
+
+
+def t_newline(t):
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+
+
+def t_error(t):
+    print("Illegal character '%s'" % t.value[0])
+    t.lexer.skip(1)
+
+
+def main():
+    # content = None
+    # with open(SAMPLE_SQUARE, 'r') as f:
+    #     content = f.readlines()
+
+    lexer = lex.lex()
+    with open(FILE_SQUARE, 'r') as f:
+        content = f.read()
+        lexer.input(content)
+
+    # Tokenize
+    while True:
+        tok = lexer.token()
+        if not tok:
+            break  # No more input
+        print(tok)
+    # lexer = Lexer(content)
+    # tokens = lexer.scan()
+    # print(tokens)
+
 
 
 if __name__ == '__main__':
