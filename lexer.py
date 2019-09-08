@@ -5,59 +5,9 @@ from ply import lex
 
 FILE_SQUARE = 'samples/square.ss'
 
-
-class TokenType(Enum):
-    ERROR = -1
-    EOP = 0
-    VAR = 1
-    KEYWD = 2
-    OP = 3
-    NUM = 4
-    IDENT = 5
-
-
 KEYWORDS = [
     'define', 'if', 'cond', 'else', 'lambda', 'car', 'cdr'
 ]
-
-OPERATORS = [
-    '+', '-', '*', '>', '>=', '<', '<='
-]
-
-
-class Token:
-    def __init__(self, tok_type: TokenType, val: str):
-        self.type = tok_type
-        self.value = val
-
-    def __repr__(self):
-        return self.__str__()
-
-    def __str__(self):
-        return f'({self.type._name_}: {self.value})'
-
-
-class KeywordToken(Token):
-    def __init__(self, val: str):
-        super().__init__(TokenType.KEYWD, val)
-
-
-class OperatorToken(Token):
-    def __init__(self, val: str):
-        super().__init__(TokenType.OP, val)
-
-
-class VarToken(Token):
-    def __init__(self, val: str):
-        super().__init__(TokenType.VAR, val)
-
-
-class IdentToken(Token):
-    def __init__(self, val: str):
-        super().__init__(TokenType.IDENT, val)
-
-
-
 
 
 class Lexer:
@@ -76,17 +26,17 @@ class Lexer:
             .split(' ')
         program = list(filter(lambda s: '' != s, program))
         # swutch quotes to be able to print them without escaping
-        program = str(program)\
+        program = str(program) \
             .replace("'", '"') \
-            .replace('"""', '"quot"')\
+            .replace('"""', '"quot"') \
             .strip()
 
         # remove outermost brackets from `str(list)`
         program = program[1: len(program) - 1]
-        program = program\
-            .replace('"("', '[')\
-            .replace('")"', ']')\
-            .replace('[,', '[')\
+        program = program \
+            .replace('"("', '[') \
+            .replace('")"', ']') \
+            .replace('[,', '[') \
             .replace(', ]', ']')
         # add some magic and AST is ready
         evaluated = eval(program)
@@ -101,51 +51,52 @@ class Lexer:
         program = ' '.join(lines)
         return program
 
-    def determine_token(self, item: str) -> Token:
-        if item in KEYWORDS:
-            return KeywordToken(item)
 
-        elif item in OPERATORS:
-            return OperatorToken(item)
-
-        elif item.isdigit():
-            return VarToken(item)
-
-        else:
-            return IdentToken(item)
-
-    def scan(self) -> list:
-        return self._scan(self.structure)
-
-    def _scan(self, program_items: list) -> list:
-        tokens = []
-        for item in program_items:
-            if list == type(item):
-                tokens.append(self._scan(item))
-            else:
-                tokens.append(self.determine_token(item))
-
-        return tokens
-
-
+# Scheme grammar: https://www.scheme.com/tspl2d/grammar.html
 tokens = (
-    'LEFTPAR', 'RIGHTPAR', 'NUMBER', 'EOL', 'WS', 'IDENT'
+    'LEFTPAR', 'RIGHTPAR', 'SPECIAL_IDENT', 'NUMBER', 'EOL', 'WS', 'IDENT',
 )
 
-t_LEFTPAR = r'\('
-t_RIGHTPAR = r'\)'
-t_EOL = r'\n'
-t_WS = r'\s+'
+
+def t_LEFTPAR(t):
+    r'\('
+    return t
 
 
-def t_IDENT(t):
-    r'[a-z0-9!$%&*\-./:<=>?@^_~]{1}[+\-a-z0-9!$%&*+\-./:<=>?@^_~]*'
+def t_RIGHTPAR(t):
+    r'\)'
+    return t
+
+
+def t_SPECIAL_IDENT(t):
+    r'[+\-\.]{1}'
     return t
 
 
 def t_NUMBER(t):
-    r'[-]?\d+'
+    r'\d+'
     t.value = int(t.value)
+    return t
+
+
+def t_EOL(t):
+    r'\n'
+    return t
+
+
+def t_WS(t):
+    r'\s+'
+    return t
+
+
+# IDENTs denote {var, keyword, symbol} based on context
+# They are formed from sequences of letters, digits, and special characters.
+# With three exceptions, identifiers cannot begin with a character that can also begin a number,
+# i.e., they cannot begin with ., +, -, or a digit. The three exceptions are the identifiers ..., +, and -.
+def t_IDENT(t):
+    r'[a-zA-Z!$%&*\-./:<=>?@^_~]{1}[+\-a-zA-Z0-9!$%&*+\-./:<=>?@^_~]*'
+    # Case is insignificant in symbols
+    t.value = t.value.lower()
     return t
 
 
@@ -159,26 +110,23 @@ def t_error(t):
     t.lexer.skip(1)
 
 
-def main():
-    # content = None
-    # with open(SAMPLE_SQUARE, 'r') as f:
-    #     content = f.readlines()
 
+def main():
     lexer = lex.lex()
     with open(FILE_SQUARE, 'r') as f:
         content = f.read()
         lexer.input(content)
 
     # Tokenize
+    tokenized = []
     while True:
         tok = lexer.token()
         if not tok:
             break  # No more input
+        tokenized.append(tok)
         print(tok)
-    # lexer = Lexer(content)
-    # tokens = lexer.scan()
-    # print(tokens)
 
+    print(tokenized)
 
 
 if __name__ == '__main__':
