@@ -43,6 +43,8 @@ tokens = (
 )
 
 
+# разбор идет сверху вниз по t_* функциям. при этом токены
+# отсортированы в порядке уменьшения длины рег-ки
 def t_LEFTPAR(t):
     r'\('
     return t
@@ -53,14 +55,14 @@ def t_RIGHTPAR(t):
     return t
 
 
-def t_SPECIAL_IDENT(t):
-    r'[+\-\.]{1}'
+def t_NUMBER(t):
+    r'[-]?\d+'
+    t.value = int(t.value)
     return t
 
 
-def t_NUMBER(t):
-    r'\d+'
-    t.value = int(t.value)
+def t_SPECIAL_IDENT(t):
+    r'[+\-\.]{1}'
     return t
 
 
