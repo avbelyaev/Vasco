@@ -1,5 +1,4 @@
 import re
-from enum import Enum
 
 from ply import lex
 
@@ -10,46 +9,32 @@ KEYWORDS = [
 ]
 
 
-class Lexer:
-    def __init__(self, program_lines: list):
-        self.prog_header = None
-        self.program = self._preprocess_program(program_lines)
-        self.structure = self._eval_list_structure(self.program)
+def _eval_list_structure(self, program: str) -> list:
+    program = ' '.join(program.split())
+    program = program \
+        .replace('(', ' ( ') \
+        .replace(')', ' ) ')
 
-    def _eval_list_structure(self, program: str) -> list:
-        program = ' '.join(program.split())
-        program = program \
-            .replace('(', ' ( ') \
-            .replace(')', ' ) ')
+    program = re.sub(r'\s+', ' ', program) \
+        .split(' ')
+    program = list(filter(lambda s: '' != s, program))
+    # swutch quotes to be able to print them without escaping
+    program = str(program) \
+        .replace("'", '"') \
+        .replace('"""', '"quot"') \
+        .strip()
 
-        program = re.sub(r'\s+', ' ', program) \
-            .split(' ')
-        program = list(filter(lambda s: '' != s, program))
-        # swutch quotes to be able to print them without escaping
-        program = str(program) \
-            .replace("'", '"') \
-            .replace('"""', '"quot"') \
-            .strip()
+    # remove outermost brackets from `str(list)`
+    program = program[1: len(program) - 1]
+    program = program \
+        .replace('"("', '[') \
+        .replace('")"', ']') \
+        .replace('[,', '[') \
+        .replace(', ]', ']')
+    # add some magic and AST is ready
+    evaluated = eval(program)
+    return evaluated
 
-        # remove outermost brackets from `str(list)`
-        program = program[1: len(program) - 1]
-        program = program \
-            .replace('"("', '[') \
-            .replace('")"', ']') \
-            .replace('[,', '[') \
-            .replace(', ]', ']')
-        # add some magic and AST is ready
-        evaluated = eval(program)
-        return evaluated
-
-    def _preprocess_program(self, program_lines: list) -> str:
-        lines = [s or not s.isspace() for s in program_lines]
-        # remove header
-        if lines[0].startswith('#lang'):
-            self.prog_header = lines.pop(0).strip()
-
-        program = ' '.join(lines)
-        return program
 
 
 # Scheme grammar: https://www.scheme.com/tspl2d/grammar.html
@@ -106,16 +91,21 @@ def t_newline(t):
 
 
 def t_error(t):
-    print("Illegal character '%s'" % t.value[0])
+    print(f'Illegal character {t.value[0]}')
     t.lexer.skip(1)
 
 
-
 def main():
-    lexer = lex.lex()
+    lines = None
     with open(FILE_SQUARE, 'r') as f:
-        content = f.read()
-        lexer.input(content)
+        lines = f.readlines()
+
+    content = list(filter(lambda line: not line.isspace(), lines))
+    header, *program = content
+    program = '\n'.join(program)
+
+    lexer = lex.lex()
+    lexer.input(program)
 
     # Tokenize
     tokenized = []
@@ -125,8 +115,6 @@ def main():
             break  # No more input
         tokenized.append(tok)
         print(tok)
-
-    print(tokenized)
 
 
 if __name__ == '__main__':
