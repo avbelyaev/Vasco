@@ -61,3 +61,5 @@ node print.c.js
     - security policies, premissions, restrictions in Chrome 
     - stack of existing browsers including older versions -> compile, transpile, ...
     - access to FS
+    
+- если контейнер не держится - `docker run -d -v $(pwd):$(pwd) trzeci/emscripten sleep infinity`
