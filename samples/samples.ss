@@ -1,15 +1,23 @@
 #lang racket
 
-(define (my-abs x) (if (< x 0) (-x) (x)))
+(define (my-abs x)
+  (if (< x 0) (- x) x))
+(display "my-abs")
+(my-abs 3)
+
+(define sq
+  (lambda (x) (* x x)))
+
+(define (leSummator x)
+  (let ((y 123)
+        (z 456))
+    (+ x y z)))
 
 (define (sign x)
   (cond
     ((< x 0) -1)
     ((= x 0) 0)
     (else 1)))
-
-(define sq
-  (lambda (x) (* x x)))
 
 
 (define (fact n)
