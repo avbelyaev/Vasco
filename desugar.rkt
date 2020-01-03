@@ -5,14 +5,10 @@
 ; TODO: read from stdin
 (define test 
 	'(
-	  (define (replace pred proc xs)
-  		(if (null? xs)
-      		'()
-      		(cons (if (pred (car xs))
-               		  (proc (car xs))
-                	  (car xs))
-            	  (replace pred proc (cdr xs)))))
-	  (replace even? (lambda (x) (* x 10)) '(0 1 2 3 4))
+	  (define (area x) (* pi 2 x x))
+(define pi 3.14)
+(display (area 10))
+
 	))
 
 
@@ -92,8 +88,11 @@
 
 
 ; ---------------- Exp -----------------
+;
+; http://matt.might.net/articles/desugaring-scheme/
+;
 (define (desugarExp exp)
-	(display (printf "desugarExp: ~s\n" exp))
+	; (display (printf "desugarExp: ~s\n" exp))
 	(match exp
 		; primitives cases
 		[(? symbol?) 						exp]
@@ -139,45 +138,53 @@
 
 
 
-; ; atomic-define? : term -> boolean
-; (define (atomic-define? def)
-;   (match def
-;     [`(define ,v ,exp)  (atomic? exp)]
-;     [else               #f]))
+; atomic-define? : term -> boolean
+(define (atomic-define? def)
+  (match def
+    [`(define ,v ,exp)  (atomic? exp)]
+    [else               #f]))
+
+(define (partition-k pred lst k)
+  (if (not (pair? lst))
+      (k '() '())
+      (partition-k pred (cdr lst) (λ (in out)
+        (if (pred (car lst))
+            (k (cons (car lst) in) out)
+            (k in (cons (car lst) out)))))))
 
 
 
 ; main desugaring func
 (define (desugar prog)
-	(displayln "1. desugar program")
+	(displayln "------- 1. desugar program -------")
 	(set! prog (desugarProgram prog))
 	
 	(displayln (pretty-format prog))
 	(newline)
 
-	(displayln "2. desugar defines")
+	(displayln "------- 2. desugar defines -------")
 	(set! prog (desugarDefines prog))
 	
 	(displayln (pretty-format prog))
 	(newline)	
-	; (set! prog
- ;    	(partition-k 
- ;     	atomic-define?
- ;    	prog
- ;     	(lambda (atomic complex)
- ;       		(define bindings
- ;         		(for/list ([c complex])
- ;           (match c
- ;             [`(define ,v ,complex)
- ;              `(,v (void))])))
+
+	(displayln "------- 3. bounce complex exprs -------")
+	(set! prog
+    	(partition-k 
+     	atomic-define?
+    	prog
+     	(lambda (atomic complex)
+       		(define bindings
+         		(for/list ([c complex])
+           			(match c
+             			[`(define ,v ,complex)			`(,v (void))])))
        
- ;       (define sets
- ;         (for/list ([c complex])
- ;           (match c
- ;             [`(define ,v ,complex)
- ;              `(set! ,v ,complex)])))
+       (define sets
+         	(for/list ([c complex])
+           		(match c
+             		[`(define ,v ,complex)			`(set! ,v ,complex)])))
        
- ;       (append atomic (list `(let ,bindings ,sets))))))
+       (append atomic (list `(let ,bindings ,sets))))))
 	prog)
 
 	

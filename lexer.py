@@ -2,7 +2,7 @@ import re
 
 from ply import lex
 
-FILE_SQUARE = 'samples/square.ss'
+FILE_SQUARE = 'samples/square.rkt'
 
 KEYWORDS = [
     'define', 'if', 'cond', 'else', 'lambda', 'car', 'cdr'
