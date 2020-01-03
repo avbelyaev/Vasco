@@ -39,6 +39,11 @@
 	    ['(void)       		#t]
 	    [else          		#f]))
 
+(define (atomic-define? def)
+  (match def
+    [`(define ,v ,exp)  (atomic? exp)]
+    [else               #f]))
+
 
 
 (define (desugarQuote exp)
@@ -138,11 +143,6 @@
 
 
 
-; atomic-define? : term -> boolean
-(define (atomic-define? def)
-  (match def
-    [`(define ,v ,exp)  (atomic? exp)]
-    [else               #f]))
 
 (define (partition-k pred lst k)
   (if (not (pair? lst))
@@ -152,6 +152,23 @@
             (k (cons (car lst) in) out)
             (k in (cons (car lst) out)))))))
 
+
+(define (lift-complex-expressions prog)
+	(partition-k 
+     	atomic-define?
+    	prog
+     	(lambda (atomic complex)
+       		(define bindings
+         		(for/list ([c complex])
+           			(match c
+             			[`(define ,v ,complex)			`(,v (void))])))
+       
+       (define sets
+         	(for/list ([c complex])
+           		(match c
+             		[`(define ,v ,complex)			`(set! ,v ,complex)])))
+       
+       (append atomic (list `(let ,bindings ,sets))))))
 
 
 ; main desugaring func
@@ -168,23 +185,13 @@
 	(displayln (pretty-format prog))
 	(newline)	
 
-	(displayln "------- 3. bounce complex exprs -------")
-	(set! prog
-    	(partition-k 
-     	atomic-define?
-    	prog
-     	(lambda (atomic complex)
-       		(define bindings
-         		(for/list ([c complex])
-           			(match c
-             			[`(define ,v ,complex)			`(,v (void))])))
-       
-       (define sets
-         	(for/list ([c complex])
-           		(match c
-             		[`(define ,v ,complex)			`(set! ,v ,complex)])))
-       
-       (append atomic (list `(let ,bindings ,sets))))))
+	; TODO enable lifting
+	; (displayln "------- 3. lift complex exprs -------")
+	; (set! prog (lift-complex-expressions prog))
+
+	; (displayln (pretty-format prog))
+	; (newline)
+
 	prog)
 
 	
@@ -195,7 +202,7 @@
 	(define desugared (desugar test))
 
 	(displayln "-------------------")
-	(displayln (pretty-format desugared)))
+	(pretty-write desugared))
 
 
 
