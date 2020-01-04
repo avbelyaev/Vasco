@@ -5,10 +5,7 @@
 ; TODO: read from stdin
 (define test 
 	'(
-	  (define (area x) (* pi 2 x x))
-(define pi 3.14)
-(display (area 10))
-
+	  (define (sq x) (* x x))
 	))
 
 
@@ -97,7 +94,7 @@
 ; http://matt.might.net/articles/desugaring-scheme/
 ;
 (define (desugarExp exp)
-	; (display (printf "desugarExp: ~s\n" exp))
+	; (printf "desugarExp: ~s\n" exp)
 	(match exp
 		; primitives cases
 		[(? symbol?) 						exp]

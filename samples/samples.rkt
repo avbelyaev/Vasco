@@ -7,6 +7,8 @@
 (display "my-abs")
 (my-abs 3)
 
+(define (sq x) (* x x))
+
 (define sq
   (lambda (x) (* x x)))
 
