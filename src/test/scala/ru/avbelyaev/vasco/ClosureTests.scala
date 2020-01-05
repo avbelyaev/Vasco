@@ -10,9 +10,18 @@ class ClosureTests extends AnyFlatSpec {
   it should "find all vars in expression" in {
     val e = List("lambda", List("x"), List("+", "x", "a", "b"))
 
-    val actualFree = Closure.vars(e)
+    val actual = Closure.vars(e)
 
-    val expectedFree = Set("+", "a", "b", "x")
-    assert(expectedFree == actualFree)
+    val expected = Set("+", "a", "b", "x")
+    assert(actual == expected)
+  }
+
+  it should "find free vars in expression" in {
+    val e = List("lambda", List("x"), List("+", "x", "a", "b"))
+
+    val actual = Closure.freeVars(e)
+
+    val expected = Set("+", "a", "b")
+    assert(actual == expected)
   }
 }
