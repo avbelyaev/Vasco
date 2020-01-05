@@ -20,8 +20,8 @@ object VascoCompiler {
     val tokensExp = Expression.of(PROGRAM_TOKENS)
     println(s"Tokens:\n$tokensExp")
 
-    val closureConvertedTokens = ClosureConverter.convertClosure(PROGRAM_TOKENS)
-    println(closureConvertedTokens)
+//    val closureConvertedTokens = ClosureConverter.convertClosure(PROGRAM_TOKENS)
+//    println(closureConvertedTokens)
   }
 
 }

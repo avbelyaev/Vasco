@@ -1,27 +1,28 @@
 package ru.avbelyaev.vasco
 
-import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * @author avbelyaev
  */
-class ClosureTests extends AnyFlatSpec {
+//It is not possible to run single test with FlatSpec tests
+class ClosureTests extends AnyFunSuite {
 
-  it should "find all vars in expression" in {
-    val e = List("lambda", List("x"), List("+", "x", "a", "b"))
+  test("should find free vars in expression") {
+    var actual = Closure.freeVars(
+      List("lambda", List("x"),
+        List("+", "x", "a", "b")))
 
-    val actual = Closure.vars(e)
-
-    val expected = Set("+", "a", "b", "x")
-    assert(actual == expected)
+    assert(actual == Set("+", "a", "b"))
   }
 
-  it should "find free vars in expression" in {
-    val e = List("lambda", List("x"), List("+", "x", "a", "b"))
+  test("should convert expression into closure") {
+    val actual = new Closure(
+      List("lambda", List("f"),
+        List("lambda", List("x"),
+          List("f", "x", "a"))), null)
 
-    val actual = Closure.freeVars(e)
-
-    val expected = Set("+", "a", "b")
-    assert(actual == expected)
+    assert(actual.func.isInstanceOf[Either[Exp, Closure]])
+    assert(actual.func.isRight)
   }
 }
