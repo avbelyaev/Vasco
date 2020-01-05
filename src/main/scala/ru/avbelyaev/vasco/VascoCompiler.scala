@@ -17,10 +17,10 @@ object VascoCompiler {
   private val PROGRAM_TOKENS = List("lambda", List("x"), List("+", "x", "a"))
 
   def main(args: Array[String]): Unit = {
-    val tokensExp = Exp.of(PROGRAM_TOKENS)
+    val tokensExp = Expression.of(PROGRAM_TOKENS)
     println(s"Tokens:\n$tokensExp")
 
-    val closureConvertedTokens = ClosureConverter.convertClosures(tokensExp)
+    val closureConvertedTokens = ClosureConverter.convertClosure(PROGRAM_TOKENS)
     println(closureConvertedTokens)
   }
 
