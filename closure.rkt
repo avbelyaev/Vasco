@@ -36,14 +36,14 @@
          (hash-ref sub exp)
          exp)]
     
-    [`(make-closure ,lam ,env)
-     `(make-closure ,(substitute sub lam) ,(substitute sub env))]
+    [`(closure* ,lam ,env)
+     `(closure* ,(substitute sub lam) ,(substitute sub env))]
     
-    [`(make-env (,vs ,es) ...)
-     `(make-env ,@(map list vs (map (substitute-with sub) es)))]
+    [`(env* (,vs ,es) ...)
+     `(env* ,@(map list vs (map (substitute-with sub) es)))]
     
-    [`(env-ref ,env ,v)
-     `(env-ref ,(substitute sub env) ,v)]
+    [`(envGet ,env ,v)
+     `(envGet ,(substitute sub env) ,v)]
     
     [`(apply-closure ,f ,args ...)
      `(apply-closure ,@(map (substitute-with sub) `(,f . ,args)))]
@@ -77,15 +77,15 @@
 
   (define originalParams  (cadr exp))
   (define modifiedParams  (cons envID originalParams))
-  (define originalBody    (caddr exp))
+  (define originalBody    (convertClosure (caddr exp)))
   (define freeVars        (findFreeVars exp))
-  (define env             freeVars);(map (lambda (v) `(,v ,v)) freeVars))
+  (define env             (map (lambda (v) `(,v ,v)) freeVars))
   ; create hash table where "k" is a var in body to be replaced with env-reference "v"
   (define replacements    (for/hash ((v freeVars)) (values v `(envGet ,envID ,v))))
   (define modifiedBody    (substitute replacements originalBody))
 
   (printf "params before: ~s\n" originalParams )
-  (printf "params before: ~s\n" modifiedParams)
+  (printf "params after : ~s\n" modifiedParams)
   (printf "body before  : ~s\n" originalBody)
   (printf "free vars    : ~s\n" freeVars)
   (printf "env          : ~s\n" env)
@@ -94,13 +94,17 @@
   
   `(closure* 
       (lambda* ,modifiedParams ,modifiedBody) 
-      ; TODO missing @ here
-      (env* ,env)))
+      (env* ,@env)))
 
 
 (define (convertClosure exp)
   (match exp
-    [`(lambda ,params ,body) (newClosure exp)]
+    ; to convert `f`
+    [(? symbol?)                exp]
+    ; to convert `(lambda (x) (f x a))`
+    [`(lambda ,params ,body)    (newClosure exp)]
+    ; to convert `(f x a)`
+    [(? pair?)                  (map convertClosure exp)]
     ; ---
     [else (error (format "error on convertClosure: ~s\n" exp))]))
 

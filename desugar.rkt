@@ -68,7 +68,7 @@
     
     [(cons (list 'unquote-splicing exp) rest)
      (if (= n 1)
-         `(append ,exp ,(desugarQuasiQuote n rest))
+        `(append ,exp ,(desugarQuasiQuote n rest))
          (cons (list 'unquote-splicing (desugarQuasiQuote (- n 1) exp))
                (desugarQuasiQuote n rest)))]
     
@@ -138,36 +138,6 @@
 
 
 
-
-
-
-(define (partition-k pred lst k)
-  (if (not (pair? lst))
-      (k '() '())
-      (partition-k pred (cdr lst) (λ (in out)
-        (if (pred (car lst))
-            (k (cons (car lst) in) out)
-            (k in (cons (car lst) out)))))))
-
-
-(define (lift-complex-expressions prog)
-	(partition-k 
-     	atomic-define?
-    	prog
-     	(lambda (atomic complex)
-       		(define bindings
-         		(for/list ([c complex])
-           			(match c
-             			[`(define ,v ,complex)			`(,v (void))])))
-       
-       (define sets
-         	(for/list ([c complex])
-           		(match c
-             		[`(define ,v ,complex)			`(set! ,v ,complex)])))
-       
-       (append atomic (list `(let ,bindings ,sets))))))
-
-
 ; main desugaring func
 (define (desugar prog)
 	(displayln "------- 1. desugar program -------")
@@ -181,13 +151,6 @@
 	
 	(displayln (pretty-format prog))
 	(newline)	
-
-	; TODO enable lifting
-	; (displayln "------- 3. lift complex exprs -------")
-	; (set! prog (lift-complex-expressions prog))
-
-	; (displayln (pretty-format prog))
-	; (newline)
 
 	prog)
 
