@@ -115,6 +115,7 @@ node print.c.js
 
 - mdn: <https://developer.mozilla.org/en-US/docs/WebAssembly/C_to_wasm>
 
+- лямбда-исчисление: <http://www.cs.columbia.edu/~aho/cs4115/Lectures/15-04-13.html>
 
 - browser vs server
     - security policies, premissions, restrictions in Chrome 
