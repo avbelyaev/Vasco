@@ -119,3 +119,28 @@ node print.c.js
 - если контейнер не держится - `docker run -d -v $(pwd):$(pwd) trzeci/emscripten sleep infinity`
 
 - web server: https://lisp.sh/crud-web-api-in-racket/
+
+
+# desugar. how to
+
+```scheme
+(define test 
+	'(;(define (my-abs1 x) (if (< x 0) (-x) (x)))
+	  ;(define sq (lambda (x) (* x x)))
+	  (cond
+		((< x 0) -1)
+		((= x 0) 0)
+		(else 1))
+	  (display "my-abs")
+	  ; (my-abs 3)
+	  ; (define (leSummator)
+	  	; (let ((x 123)
+	  		  ; (y 456))
+	  		 ; (+ x y)))
+	  ; (define (sign x)
+  		; (cond
+    		; ((< x 0) -1)
+    		; ((= x 0) 0)
+    		; (else 1)))
+    		))
+```
