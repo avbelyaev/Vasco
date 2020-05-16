@@ -1,4 +1,3 @@
-#lang racket
 
 
 (define (sq x)
