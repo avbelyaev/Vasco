@@ -152,7 +152,7 @@ node print.c.js
 
 ```shell script
 cd lambdajam
-racket scheme-to-c.rkt < ../samples/sum.rkt > sum.c
+racket scheme-to-c.rkt < ../samples/ex_1_sum.rkt > sum.c
 gcc -o sum sum.c
 # удаляем те строки где warning'и и перекомпилируем без ошибок
 
