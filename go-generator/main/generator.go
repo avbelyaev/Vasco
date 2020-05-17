@@ -1,5 +1,10 @@
 package main
 
+import (
+	"errors"
+	"fmt"
+)
+
 var prefixStub = `
 package main
 
@@ -10,25 +15,37 @@ var postfixStub = `
 }
 `
 
-func GenerateTarget(node AstNode) string {
+func GenerateTarget(node AstNode) (string, error) {
 
 	toEmit := ""
 	nodeType := node.GetType()
-	switch nodeType {
-	case AddNode:
-		leftExprGenerated := GenerateTarget(node.GetSubNodes()[0])
-		rightExprGenerated := GenerateTarget(node.GetSubNodes()[1])
-		toEmit += leftExprGenerated + " + " + rightExprGenerated
-		return toEmit
 
-	case IntNode:
+	if nodeType == AddNode {
+		leftExprGenerated, err := GenerateTarget(node.GetSubNodes()[0])
+		if nil != err {
+			return "", err
+		}
+		rightExprGenerated, err := GenerateTarget(node.GetSubNodes()[1])
+		if nil != err {
+			return "", err
+		}
+		toEmit += leftExprGenerated + " + " + rightExprGenerated
+		return toEmit, nil
+
+	} else if nodeType == IntNode {
 		toEmit := node.DebugString()
-		return toEmit
-	case DisplayNode:
+		return toEmit, nil
+
+	} else if nodeType == DisplayNode {
 		toEmit := "print("
-		toEmit += GenerateTarget(node)
+		targetStr, err := GenerateTarget(node.GetSubNodes()[0])
+		if nil != err {
+			return "", err
+		}
+		toEmit += targetStr + ")"
+		return toEmit, nil
 	}
-	return toEmit
+	return "", errors.New(fmt.Sprintf("unexpected node %s", node.DebugString()))
 }
 
 func main() {
@@ -36,7 +53,11 @@ func main() {
 	program := ParseTokens(tokens)
 	root := program.GetSubNodes()[0]
 	s := prefixStub
-	s += GenerateTarget(root)
+	targetStr, err := GenerateTarget(root)
+	if nil != err {
+		print(err)
+	}
+	s += targetStr
 	s += postfixStub
 	print(s)
 }
