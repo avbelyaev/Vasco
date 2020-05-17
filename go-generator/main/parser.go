@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"math"
+	. "wascho/go-generator/main/node"
 )
 
 var IDX = 0
@@ -119,7 +120,8 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 	}
 	if accept(tokens, TokenIdent) {
 		identToken := tokens[IDX-1]
-		switch identToken.Value.String() {
+		identTokenValue := identToken.ValueStr
+		switch identTokenValue {
 		case "if":
 			// TODO: error-handling here (and throughout the parser!)
 			cond, _ := parseExpression(tokens)
@@ -147,7 +149,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 					return nil, expError
 				}
 				lambdaNode := NewLambdaExp(funcArgs, lambdaExp)
-				defNode := NewDefExp(funcName, lambdaNode)
+				defNode := NewDefExp(funcName, lambdaNode, Function)
 				return defNode, nil
 			} else {
 				// defining something besides a function
@@ -163,7 +165,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 				if nil != expError {
 					return nil, expError
 				}
-				defNode := NewDefExp(name.Value.String(), newExp)
+				defNode := NewDefExp(name.Value.String(), newExp, Variable)
 				return defNode, nil
 			}
 		case "lambda":
@@ -181,8 +183,8 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 			lambdaNode := NewLambdaExp(lambdaArgs, lambdaExp)
 			return lambdaNode, nil
 
-		case "display":
-			exprToDisplay, err := parseExpression(tokens)
+		default:
+			callArg, err := parseExpression(tokens)
 			if nil != err {
 				return nil, err
 			}
@@ -190,11 +192,10 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 			if nil != expError {
 				return nil, expError
 			}
-			dispNode := NewDisplayExpr(exprToDisplay)
-			return dispNode, nil
+			callNode := NewCallExpr(identTokenValue, callArg)
+			return callNode, nil
 		}
 	}
-	// no matches?
 	return nil, errors.New("Unexpected token")
 }
 

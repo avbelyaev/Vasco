@@ -2,11 +2,12 @@ package main
 
 import (
 	"testing"
+	. "wascho/go-generator/main/node"
 )
 
 func checkProgram(program *Program, expectedProgram *Program, t *testing.T) {
 	for i, subNode := range program.GetSubNodes() {
-		expectedSubNode := expectedProgram.subNodes[i]
+		expectedSubNode := expectedProgram.SubNodes[i]
 		if expectedSubNode.GetType() != subNode.GetType() {
 			t.Error("Parser type error, expected:\n" + expectedSubNode.String() + "\nGot:\n" + subNode.String())
 		} else if expectedSubNode.String() != subNode.String() {
