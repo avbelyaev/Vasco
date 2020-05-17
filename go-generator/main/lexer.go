@@ -34,26 +34,31 @@ const (
 )
 
 type Token struct {
-	Type  TokenType
-	Value bytes.Buffer
+	Type     TokenType
+	Value    bytes.Buffer
+	ValueStr string
 }
 
 // NewTokenString is a convenience function that returns a token with
 // a given string value.
 func NewTokenString(tokenType TokenType, tokenString string) *Token {
 	tokenValue := bytes.NewBufferString(tokenString)
-	token := Token{tokenType, *tokenValue}
-	return &token
+	token := &Token{
+		tokenType,
+		*tokenValue,
+		tokenString,
+	}
+	return token
 }
 
 // NewTokenRaw creates a new token from a raw Buffer.
-func NewTokenRaw(tokenType TokenType, tokenBuffer bytes.Buffer) *Token {
+func NewTokenRaw(tokenType TokenType, tokenBuffer bytes.Buffer, repr string) *Token {
 	tokenSlice := make([]byte, tokenBuffer.Len(), tokenBuffer.Len())
 	// copy to avoid the slice (and thus buffer data) getting overriden by
 	// future code
 	copy(tokenSlice, tokenBuffer.Bytes())
 	tokenValue := bytes.NewBuffer(tokenSlice)
-	token := Token{tokenType, *tokenValue}
+	token := Token{tokenType, *tokenValue, repr}
 	return &token
 }
 
@@ -81,9 +86,9 @@ func flushAccumulator(
 	tokenBuffer *[]*Token) {
 	if *accumulatorType == TokenFloatLiteral || *accumulatorType == TokenIntLiteral {
 		convertedBuffer := bufferStringToNum(*accumulatorType, *accumulatorBuffer)
-		*tokenBuffer = append(*tokenBuffer, NewTokenRaw(*accumulatorType, *convertedBuffer))
+		*tokenBuffer = append(*tokenBuffer, NewTokenRaw(*accumulatorType, *convertedBuffer, string(accumulatorBuffer.Bytes())))
 	} else {
-		*tokenBuffer = append(*tokenBuffer, NewTokenRaw(*accumulatorType, *accumulatorBuffer))
+		*tokenBuffer = append(*tokenBuffer, NewTokenRaw(*accumulatorType, *accumulatorBuffer, string(accumulatorBuffer.Bytes())))
 	}
 	accumulatorBuffer.Reset()
 	*accumulatorType = TokenNone

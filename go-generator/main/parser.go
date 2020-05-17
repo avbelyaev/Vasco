@@ -25,6 +25,7 @@ const (
 	EqNode
 	IfNode
 	DefNode
+	DisplayNode
 	LambdaNode
 	IdentNode
 	IntNode
@@ -257,6 +258,23 @@ func (d DefExp) DebugString() string {
 	return "DefExp(" + d.Name + ", " + d.subNodes[0].DebugString() + ")"
 }
 
+type DisplayExp struct {
+	SExp
+}
+
+func NewDisplayExpr(exp AstNode) *DisplayExp {
+	node := new(DisplayExp)
+	return node
+}
+
+func (d DisplayExp) GetType() AstNodeType {
+	return DisplayNode
+}
+
+func (d DisplayExp) DebugString() string {
+	return "Display"
+}
+
 type LambdaExp struct {
 	SExp
 	Args []string
@@ -273,6 +291,7 @@ func NewLambdaExp(args []string, exp AstNode) *LambdaExp {
 func (l LambdaExp) GetType() AstNodeType {
 	return LambdaNode
 }
+
 func (l LambdaExp) DebugString() string {
 	return "LambdaExp(" + strings.Trim(fmt.Sprintf("%v", l.Args), "[]") + ", " + l.subNodes[0].DebugString() + ")"
 }
@@ -309,6 +328,9 @@ func (i IntLiteral) GetType() AstNodeType {
 }
 func (i IntLiteral) DebugString() string {
 	return strconv.FormatInt(i.Value, 10)
+}
+func (i IntLiteral) GetValue() int64 {
+	return i.Value
 }
 
 type FloatLiteral struct {
@@ -417,7 +439,7 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 	}
 	// not a literal, attempt to parse an expression
 	lparenError := expect(tokens, TokenLParen, currentIndex)
-	if lparenError != nil {
+	if nil != lparenError {
 		return nil, lparenError
 	}
 	// jump past the lparen
@@ -428,11 +450,11 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 		// parse the left-hand and right hand sides recursively
 		// this also takes care of handling nested expressions
 		lhs, lhsError := parseExpression(tokens, currentIndex)
-		if lhsError != nil {
+		if nil != lhsError {
 			return nil, lhsError
 		}
 		rhs, rhsError := parseExpression(tokens, currentIndex)
-		if rhsError != nil {
+		if nil != rhsError {
 			return nil, rhsError
 		}
 
@@ -461,7 +483,7 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 
 		// make sure the expression has a closing rparen
 		expError := closeExp(tokens, currentIndex)
-		if expError != nil {
+		if nil != expError {
 			return nil, expError
 		}
 		return expNode, nil
@@ -476,7 +498,7 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 			ifFalse, _ := parseExpression(tokens, currentIndex)
 			ifNode := NewIfExp(cond, ifTrue, ifFalse)
 			expError := closeExp(tokens, currentIndex)
-			if expError != nil {
+			if nil != expError {
 				return nil, expError
 			}
 			return ifNode, nil
@@ -484,7 +506,7 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 			// are we attempting to define a function?
 			if accept(tokens, TokenLParen, currentIndex) {
 				nameError := expect(tokens, TokenIdent, currentIndex)
-				if nameError != nil {
+				if nil != nameError {
 					return nil, nameError
 				}
 				accept(tokens, TokenIdent, currentIndex)
@@ -492,7 +514,7 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 				funcArgs, _ := parseArgs(tokens, currentIndex)
 				lambdaExp, _ := parseExpression(tokens, currentIndex)
 				expError := closeExp(tokens, currentIndex)
-				if expError != nil {
+				if nil != expError {
 					return nil, expError
 				}
 				lambdaNode := NewLambdaExp(funcArgs, lambdaExp)
@@ -501,7 +523,7 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 			} else {
 				// defining something besides a function
 				nameError := expect(tokens, TokenIdent, currentIndex)
-				if nameError != nil {
+				if nil != nameError {
 					return nil, nameError
 				}
 				accept(tokens, TokenIdent, currentIndex)
@@ -509,7 +531,7 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 				// this handles longhand lambda definitions too
 				newExp, _ := parseExpression(tokens, currentIndex)
 				expError := closeExp(tokens, currentIndex)
-				if expError != nil {
+				if nil != expError {
 					return nil, expError
 				}
 				defNode := NewDefExp(name.Value.String(), newExp)
@@ -517,18 +539,20 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 			}
 		case "lambda":
 			lparenError := expect(tokens, TokenLParen, currentIndex)
-			if lparenError != nil {
+			if nil != lparenError {
 				return nil, lparenError
 			}
 			*currentIndex++
 			lambdaArgs, _ := parseArgs(tokens, currentIndex)
 			lambdaExp, _ := parseExpression(tokens, currentIndex)
 			expError := closeExp(tokens, currentIndex)
-			if expError != nil {
+			if nil != expError {
 				return nil, expError
 			}
 			lambdaNode := NewLambdaExp(lambdaArgs, lambdaExp)
 			return lambdaNode, nil
+		case "display":
+
 		}
 	}
 	// no matches?
@@ -538,7 +562,7 @@ func parseExpression(tokens []*Token, currentIndex *int) (AstNode, error) {
 // convenience function to ensure an expression is properly closed
 func closeExp(tokens []*Token, currentIndex *int) error {
 	rparenError := expect(tokens, TokenRParen, currentIndex)
-	if rparenError != nil {
+	if nil != rparenError {
 		return rparenError
 	}
 	*currentIndex += 1
@@ -554,7 +578,7 @@ func parseArgs(tokens []*Token, currentIndex *int) ([]string, error) {
 			funcArgs = append(funcArgs, arg)
 		} else {
 			expError := closeExp(tokens, currentIndex)
-			if expError != nil {
+			if nil != expError {
 				return nil, expError
 			}
 			break

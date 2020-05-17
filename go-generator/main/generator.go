@@ -22,14 +22,18 @@ func GenerateTarget(node AstNode) string {
 		return toEmit
 
 	case IntNode:
-		toEmit += "x"
+		toEmit := node.DebugString()
 		return toEmit
+	case DisplayNode:
+		toEmit := "print("
+		toEmit += GenerateTarget(node)
 	}
 	return toEmit
 }
 
 func main() {
-	program := NewProgram(NewAddExp(NewIntLiteral(5), NewIntLiteral(3)))
+	tokens := LexExp("(display 314)")
+	program := ParseTokens(tokens)
 	root := program.GetSubNodes()[0]
 	s := prefixStub
 	s += GenerateTarget(root)
