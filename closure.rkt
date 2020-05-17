@@ -13,10 +13,6 @@
 ;          (f x a))
 ;      ))
 
-(define test
-    '(
-       (+ 111 222)
-     ))
 
 
 (define (substitute sub exp)
