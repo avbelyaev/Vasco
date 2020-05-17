@@ -186,8 +186,8 @@ func TestString(t *testing.T) {
 func TestBool(t *testing.T) {
 	tokens := LexExp("#t #f bla")
 	expectedTokens := []*Token{
-		NewTokenRaw(TokenBoolLiteral, *bytes.NewBuffer([]byte{1})),
-		NewTokenRaw(TokenBoolLiteral, *bytes.NewBuffer([]byte{0})),
+		NewTokenRaw(TokenBoolLiteral, *bytes.NewBuffer([]byte{1}), "1"),
+		NewTokenRaw(TokenBoolLiteral, *bytes.NewBuffer([]byte{0}), "0"),
 		NewTokenString(TokenIdent, "bla")}
 	checkTokens(tokens, expectedTokens, t)
 }

@@ -35,7 +35,7 @@ type AstNode interface {
 	GetSubNodes() []AstNode
 	AddSubNode(AstNode)
 	GetType() AstNodeType
-	DebugString() string
+	String() string
 }
 
 // base struct that all AST node implementations build off of
@@ -78,8 +78,8 @@ func NewAddExp(lhs AstNode, rhs AstNode) *AddExp {
 func (a AddExp) GetType() AstNodeType {
 	return AddNode
 }
-func (a AddExp) DebugString() string {
-	return "AddExp(" + a.subNodes[0].DebugString() + ", " + a.subNodes[1].DebugString() + ")"
+func (a AddExp) String() string {
+	return "AddExp(" + a.subNodes[0].String() + ", " + a.subNodes[1].String() + ")"
 }
 
 type SubExp struct {
@@ -95,8 +95,8 @@ func NewSubExp(lhs AstNode, rhs AstNode) *SubExp {
 func (s SubExp) GetType() AstNodeType {
 	return SubNode
 }
-func (s SubExp) DebugString() string {
-	return "SubExp(" + s.subNodes[0].DebugString() + ", " + s.subNodes[1].DebugString() + ")"
+func (s SubExp) String() string {
+	return "SubExp(" + s.subNodes[0].String() + ", " + s.subNodes[1].String() + ")"
 }
 
 type MulExp struct {
@@ -112,8 +112,8 @@ func NewMulExp(lhs AstNode, rhs AstNode) *MulExp {
 func (m MulExp) GetType() AstNodeType {
 	return MulNode
 }
-func (m MulExp) DebugString() string {
-	return "MulExp(" + m.subNodes[0].DebugString() + ", " + m.subNodes[1].DebugString() + ")"
+func (m MulExp) String() string {
+	return "MulExp(" + m.subNodes[0].String() + ", " + m.subNodes[1].String() + ")"
 }
 
 type DivExp struct {
@@ -129,8 +129,8 @@ func NewDivExp(lhs AstNode, rhs AstNode) *DivExp {
 func (d DivExp) GetType() AstNodeType {
 	return DivNode
 }
-func (d DivExp) DebugString() string {
-	return "DivExp(" + d.subNodes[0].DebugString() + ", " + d.subNodes[1].DebugString() + ")"
+func (d DivExp) String() string {
+	return "DivExp(" + d.subNodes[0].String() + ", " + d.subNodes[1].String() + ")"
 }
 
 type LtExp struct {
@@ -146,8 +146,8 @@ func NewLtExp(lhs AstNode, rhs AstNode) *LtExp {
 func (l LtExp) GetType() AstNodeType {
 	return LtNode
 }
-func (l LtExp) DebugString() string {
-	return "LtExp(" + l.subNodes[0].DebugString() + ", " + l.subNodes[1].DebugString() + ")"
+func (l LtExp) String() string {
+	return "LtExp(" + l.subNodes[0].String() + ", " + l.subNodes[1].String() + ")"
 }
 
 type LteExp struct {
@@ -163,8 +163,8 @@ func NewLteExp(lhs AstNode, rhs AstNode) *LteExp {
 func (l LteExp) GetType() AstNodeType {
 	return LteNode
 }
-func (l LteExp) DebugString() string {
-	return "LteExp(" + l.subNodes[0].DebugString() + ", " + l.subNodes[1].DebugString() + ")"
+func (l LteExp) String() string {
+	return "LteExp(" + l.subNodes[0].String() + ", " + l.subNodes[1].String() + ")"
 }
 
 type GtExp struct {
@@ -180,8 +180,8 @@ func NewGtExp(lhs AstNode, rhs AstNode) *GtExp {
 func (g GtExp) GetType() AstNodeType {
 	return GtNode
 }
-func (g GtExp) DebugString() string {
-	return "GtExp(" + g.subNodes[0].DebugString() + ", " + g.subNodes[1].DebugString() + ")"
+func (g GtExp) String() string {
+	return "GtExp(" + g.subNodes[0].String() + ", " + g.subNodes[1].String() + ")"
 }
 
 type GteExp struct {
@@ -197,8 +197,8 @@ func NewGteExp(lhs AstNode, rhs AstNode) *GteExp {
 func (g GteExp) GetType() AstNodeType {
 	return LteNode
 }
-func (g GteExp) DebugString() string {
-	return "GteExp(" + g.subNodes[0].DebugString() + ", " + g.subNodes[1].DebugString() + ")"
+func (g GteExp) String() string {
+	return "GteExp(" + g.subNodes[0].String() + ", " + g.subNodes[1].String() + ")"
 }
 
 type EqExp struct {
@@ -214,8 +214,8 @@ func NewEqExp(lhs AstNode, rhs AstNode) *EqExp {
 func (e EqExp) GetType() AstNodeType {
 	return EqNode
 }
-func (e EqExp) DebugString() string {
-	return "EqExp(" + e.subNodes[0].DebugString() + ", " + e.subNodes[1].DebugString() + ")"
+func (e EqExp) String() string {
+	return "EqExp(" + e.subNodes[0].String() + ", " + e.subNodes[1].String() + ")"
 }
 
 type IfExp struct {
@@ -232,8 +232,8 @@ func NewIfExp(cond AstNode, onTrue AstNode, onFalse AstNode) *IfExp {
 func (i IfExp) GetType() AstNodeType {
 	return IfNode
 }
-func (i IfExp) DebugString() string {
-	return "IfExp(" + i.subNodes[0].DebugString() + ", " + i.subNodes[1].DebugString() + ", " + i.subNodes[2].DebugString() + ")"
+func (i IfExp) String() string {
+	return "IfExp(" + i.subNodes[0].String() + ", " + i.subNodes[1].String() + ", " + i.subNodes[2].String() + ")"
 }
 
 type DefExp struct {
@@ -250,8 +250,8 @@ func NewDefExp(name string, exp AstNode) *DefExp {
 func (d DefExp) GetType() AstNodeType {
 	return DefNode
 }
-func (d DefExp) DebugString() string {
-	return "DefExp(" + d.Name + ", " + d.subNodes[0].DebugString() + ")"
+func (d DefExp) String() string {
+	return "DefExp(" + d.Name + ", " + d.subNodes[0].String() + ")"
 }
 
 type DisplayExp struct {
@@ -268,7 +268,7 @@ func (d DisplayExp) GetType() AstNodeType {
 	return DisplayNode
 }
 
-func (d DisplayExp) DebugString() string {
+func (d DisplayExp) String() string {
 	return "Display"
 }
 
@@ -289,8 +289,8 @@ func (l LambdaExp) GetType() AstNodeType {
 	return LambdaNode
 }
 
-func (l LambdaExp) DebugString() string {
-	return "LambdaExp(" + strings.Trim(fmt.Sprintf("%v", l.Args), "[]") + ", " + l.subNodes[0].DebugString() + ")"
+func (l LambdaExp) String() string {
+	return "LambdaExp(" + strings.Trim(fmt.Sprintf("%v", l.Args), "[]") + ", " + l.subNodes[0].String() + ")"
 }
 
 type IdentExp struct {
@@ -306,7 +306,7 @@ func NewIdentExp(name string) *IdentExp {
 func (i IdentExp) GetType() AstNodeType {
 	return IdentNode
 }
-func (i IdentExp) DebugString() string {
+func (i IdentExp) String() string {
 	return i.Name
 }
 
@@ -323,7 +323,7 @@ func NewIntLiteral(value int64) *IntLiteral {
 func (i IntLiteral) GetType() AstNodeType {
 	return IntNode
 }
-func (i IntLiteral) DebugString() string {
+func (i IntLiteral) String() string {
 	return strconv.FormatInt(i.Value, 10)
 }
 func (i IntLiteral) GetValue() int64 {
@@ -343,7 +343,7 @@ func NewFloatLiteral(value float64) *FloatLiteral {
 func (f FloatLiteral) GetType() AstNodeType {
 	return FloatNode
 }
-func (f FloatLiteral) DebugString() string {
+func (f FloatLiteral) String() string {
 	return strconv.FormatFloat(f.Value, 'g', -1, 64)
 }
 
@@ -360,7 +360,7 @@ func NewStringLiteral(value string) *StringLiteral {
 func (s StringLiteral) GetType() AstNodeType {
 	return StringNode
 }
-func (s StringLiteral) DebugString() string {
+func (s StringLiteral) String() string {
 	return "\"" + s.Value + "\""
 }
 
@@ -377,6 +377,6 @@ func NewBoolLiteral(value bool) *BoolLiteral {
 func (b BoolLiteral) GetType() AstNodeType {
 	return BoolNode
 }
-func (b BoolLiteral) DebugString() string {
+func (b BoolLiteral) String() string {
 	return strconv.FormatBool(b.Value)
 }

@@ -33,7 +33,7 @@ func GenerateTarget(node AstNode) (string, error) {
 		return toEmit, nil
 
 	} else if nodeType == IntNode {
-		toEmit := node.DebugString()
+		toEmit := node.String()
 		return toEmit, nil
 
 	} else if nodeType == DisplayNode {
@@ -45,7 +45,7 @@ func GenerateTarget(node AstNode) (string, error) {
 		toEmit += targetStr + ")"
 		return toEmit, nil
 	}
-	return "", errors.New(fmt.Sprintf("unexpected node %s", node.DebugString()))
+	return "", errors.New(fmt.Sprintf("unexpected node %s", node.String()))
 }
 
 func main() {

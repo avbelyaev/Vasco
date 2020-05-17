@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
 	"math"
@@ -28,11 +27,6 @@ func accept(tokens []*Token, expectedType TokenType) bool {
 	return false
 }
 
-// grabAccepted returns the token just before current, useful for grabbing the value of an accepted token
-func grabAccepted(tokens []*Token) *Token {
-	return tokens[IDX-1]
-}
-
 // expect returns an error if the current token doesn't match the given type
 func expect(tokens []*Token, expectedType TokenType) error {
 	if len(tokens)-1 < IDX {
@@ -48,27 +42,28 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 	currentType := tokens[IDX].Type
 	if currentType == TokenIntLiteral {
 		IDX++
-		literal := grabAccepted(tokens)
-		return NewIntLiteral(bufferToInt(literal.Value)), nil
+		intValue, _ := binary.Varint(tokens[IDX-1].Value.Bytes())
+		return NewIntLiteral(intValue), nil
 
 	} else if currentType == TokenFloatLiteral {
 		IDX++
-		literal := grabAccepted(tokens)
-		return NewFloatLiteral(bufferToFloat(literal.Value)), nil
+		bits := binary.LittleEndian.Uint64(tokens[IDX-1].Value.Bytes())
+		floatValue := math.Float64frombits(bits)
+		return NewFloatLiteral(floatValue), nil
 
 	} else if currentType == TokenStringLiteral {
 		IDX++
-		literal := grabAccepted(tokens)
+		literal := tokens[IDX-1]
 		return NewStringLiteral(literal.Value.String()), nil
 
 	} else if currentType == TokenBoolLiteral {
 		IDX++
-		literal := grabAccepted(tokens)
+		literal := tokens[IDX-1]
 		return NewBoolLiteral(literal.Value.Bytes()[0] == 1), nil
 
 	} else if currentType == TokenIdent {
 		IDX++
-		identToken := grabAccepted(tokens)
+		identToken := tokens[IDX-1]
 		return NewIdentExp(identToken.Value.String()), nil
 	}
 	// not a literal, attempt to parse an expression
@@ -80,7 +75,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 	IDX++
 	if accept(tokens, TokenOp) {
 		// grab the operator token so we can find out which one it is
-		opToken := grabAccepted(tokens)
+		opToken := tokens[IDX-1]
 		// parse the left-hand and right hand sides recursively
 		// this also takes care of handling nested expressions
 		lhs, lhsError := parseExpression(tokens)
@@ -123,7 +118,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 		return expNode, nil
 	}
 	if accept(tokens, TokenIdent) {
-		identToken := grabAccepted(tokens)
+		identToken := tokens[IDX-1]
 		switch identToken.Value.String() {
 		case "if":
 			// TODO: error-handling here (and throughout the parser!)
@@ -144,7 +139,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 					return nil, nameError
 				}
 				accept(tokens, TokenIdent)
-				funcName := grabAccepted(tokens).Value.String()
+				funcName := tokens[IDX-1].Value.String()
 				funcArgs, _ := parseArgs(tokens)
 				lambdaExp, _ := parseExpression(tokens)
 				expError := closeExp(tokens)
@@ -161,7 +156,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 					return nil, nameError
 				}
 				accept(tokens, TokenIdent)
-				name := grabAccepted(tokens)
+				name := tokens[IDX-1]
 				// this handles longhand lambda definitions too
 				newExp, _ := parseExpression(tokens)
 				expError := closeExp(tokens)
@@ -218,7 +213,7 @@ func parseArgs(tokens []*Token) ([]string, error) {
 	funcArgs := make([]string, 0)
 	for {
 		if accept(tokens, TokenIdent) {
-			arg := grabAccepted(tokens).Value.String()
+			arg := tokens[IDX-1].Value.String()
 			funcArgs = append(funcArgs, arg)
 		} else {
 			expError := closeExp(tokens)
@@ -229,13 +224,4 @@ func parseArgs(tokens []*Token) ([]string, error) {
 		}
 	}
 	return funcArgs, nil
-}
-
-func bufferToInt(buffer bytes.Buffer) int64 {
-	num, _ := binary.Varint(buffer.Bytes())
-	return num
-}
-func bufferToFloat(buffer bytes.Buffer) float64 {
-	bits := binary.LittleEndian.Uint64(buffer.Bytes())
-	return math.Float64frombits(bits)
 }

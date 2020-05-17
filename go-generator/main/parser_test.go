@@ -8,9 +8,9 @@ func checkProgram(program *Program, expectedProgram *Program, t *testing.T) {
 	for i, subNode := range program.GetSubNodes() {
 		expectedSubNode := expectedProgram.subNodes[i]
 		if expectedSubNode.GetType() != subNode.GetType() {
-			t.Error("Parser type error, expected:\n" + expectedSubNode.DebugString() + "\nGot:\n" + subNode.DebugString())
-		} else if expectedSubNode.DebugString() != subNode.DebugString() {
-			t.Error("Parser value error, expected:\n" + expectedSubNode.DebugString() + "\nGot:\n" + subNode.DebugString())
+			t.Error("Parser type error, expected:\n" + expectedSubNode.String() + "\nGot:\n" + subNode.String())
+		} else if expectedSubNode.String() != subNode.String() {
+			t.Error("Parser value error, expected:\n" + expectedSubNode.String() + "\nGot:\n" + subNode.String())
 		}
 	}
 }
