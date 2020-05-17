@@ -1,4 +1,4 @@
-package schego
+package main
 
 import (
 	"bytes"
