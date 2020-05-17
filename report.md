@@ -142,3 +142,42 @@ node print.c.js
     - access to FS
     
 - если контейнер не держится - `docker run -d -v $(pwd):$(pwd) trzeci/emscripten sleep infinity`
+
+
+
+## В презентацию:
+
+https://habr.com/ru/post/436698/
+
+
+У языков семейства Lisp фактически нет синтаксиса — пользователь сразу пишет AST. 
+(Ну а для записи AST достаточно простой рекурсивно-регулярной грамматики.)
+
+язык упорно не хочет умирать, вне академического программирования встречается как язык сценариев
+ и расширений в некоторых приложениях, в том числе весьма распространенных (GIMP, например). 
+ Думаю, одна из причин выживаемости не только в простоте разбора, но и в относительно небольшом 
+ наборе примитивов, которые являются достаточно гибкими и выразительными + практически неограниченные 
+ возможности расширения.
+
+«AST прямо в мозг» хорошо тогда, когда вам надо с ним работать. Собственно, это и обеспечивает удобство 
+символьных вычислений в ЯП семейства Лисп. Читать код на них, особенно бегло, особенно 
+если не практикуешься в этом регулярно — трудно. Пробовали реализовывать «сахар» в стиле Haskell,
+ получалось наглядно (что-то вроде псевдокода в функциональном стиле). Но, конечно, с AST его все равно 
+ приходилось работать как со списком символов
+
+
+Examples of mathematical objects often used to model systems are: 
+finite state machines, labelled transition systems, Petri nets, vector addition systems, 
+timed automata, hybrid automata, process algebra, formal semantics of programming 
+languages such as operational semantics, denotational semantics, axiomatic semantics and Hoare logic.
+
+
+Hoare logic is a specific formal system for reasoning rigorously about the correctness of computer programs.[3] 
+It uses axiomatic techniques to define programming language semantics and argue about the correctness 
+of programs through assertions known as Hoare triples.
+
+источники:
+
+- Х. Абельсона и Д. Сассмана «Структура и интерпретация компьютерных программ».
+- https://en.wikipedia.org/wiki/Invariant-based_programming
+- логика хоара: http://homepage.divms.uiowa.edu/~slonnegr/plf/Book/Chapter11.pdf

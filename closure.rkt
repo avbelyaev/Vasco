@@ -4,13 +4,18 @@
 (include "utils.rkt")
 
 
-; program being desugared
+; program being closure-converted
 ; TODO: read from stdin
+; (define test
+;     '(
+;        lambda (f)
+;         (lambda (x)
+;          (f x a))
+;      ))
+
 (define test
     '(
-       lambda (f)
-        (lambda (x)
-         (f x a))
+       (+ 111 222)
      ))
 
 
@@ -45,8 +50,8 @@
     [`(envGet ,env ,v)
      `(envGet ,(substitute sub env) ,v)]
     
-    [`(apply-closure ,f ,args ...)
-     `(apply-closure ,@(map (substitute-with sub) `(,f . ,args)))]
+    [`(applyclosure ,f ,args ...)
+     `(applyclosure ,@(map (substitute-with sub) `(,f . ,args)))]
     
     [`(,f ,args ...)
      (map (substitute-with sub) `(,f . ,args))]))
@@ -72,8 +77,8 @@
 
 
 (define (newClosure exp)
-  (define envID (gensym "CLS"))
-  (printf "~s\n" envID)
+  (define envID (gensym "CLOSURE"))
+  (printf "_ ~s _\n" envID)
 
   (define originalParams  (cadr exp))
   (define modifiedParams  (cons envID originalParams))
@@ -84,13 +89,14 @@
   (define replacements    (for/hash ((v freeVars)) (values v `(envGet ,envID ,v))))
   (define modifiedBody    (substitute replacements originalBody))
 
-  (printf "params before: ~s\n" originalParams )
-  (printf "params after : ~s\n" modifiedParams)
-  (printf "body before  : ~s\n" originalBody)
-  (printf "free vars    : ~s\n" freeVars)
-  (printf "env          : ~s\n" env)
-  (printf "repl-mnts    : ~s\n" replacements)
-  (printf "body after   : ~s\n" modifiedBody)
+  (printf "params before| ~s\n" originalParams )
+  (printf "params after | ~s\n" modifiedParams)
+  (printf "body before  | ~s\n" originalBody)
+  (printf "free vars    | ~s\n" freeVars)
+  (printf "env          | ~s\n" env)
+  (printf "replacements | ~s\n" replacements)
+  (printf "body after   | ~s\n" modifiedBody)
+  (printf "_____________|\n")
   
   `(closure* 
       (lambda* ,modifiedParams ,modifiedBody) 
@@ -99,6 +105,7 @@
 
 (define (convertClosure exp)
   (match exp
+    ; for example converting (lambda (x) (f x a)):
     ; to convert `f`
     [(? symbol?)                exp]
     ; to convert `(lambda (x) (f x a))`
@@ -109,13 +116,15 @@
     [else (error (format "error on convertClosure: ~s\n" exp))]))
 
 
-(define (main)
+(define (main input)
   (displayln "converting closure...")
-  (define converted (convertClosure test))
+  (pretty-write input)
+
+  (define converted (convertClosure input))
 
   (displayln "-------------------")
   (pretty-write converted))
 
 
 
-(main)
+(main test)

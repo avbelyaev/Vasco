@@ -1,27 +1,38 @@
 #lang racket
 
+ 
 
-(define (emit exp)
-  (let* ((header ""))
-    (string-append 
-     headrer
-     "int main (int argc, char* argv[]) {\n"
-     "  __sum         = MakePrimitive() ;\n" 
-     "  __product     = MakePrimitive() ;\n" 
-     "  __difference  = MakePrimitive() ;\n" 
-     "  __display     = MakePrimitive() ;\n" 
-     "  __numEqual    = MakePrimitive() ;\n"      
-     "  " body " ;\n"
-     "  return 0;\n"
-     " }\n")))
-
-
+; program being generated
+; TODO: read from stdin
+(define test
+    '(
+       closure*
+        (lambda*
+          (CLOSURE130 f)
+          (closure*
+            (lambda* (CLOSURE131 x) ((envGet CLOSURE131 f) x (envGet CLOSURE131 a)))
+            (env* (a (envGet CLOSURE130 a)) (f f))))
+          (env* (a a))
+     ))
 
 
-(define (main)
-  (displayln "emitting code...")
-  (pretty-write converted))
+(define (generate line)
+  (display line)
+  (newline))
+
+
+(define (generateCode exp)
+  (generate "asdas"))
 
 
 
-(main)
+
+(define (main input)
+  (displayln "generating code...")
+  (pretty-write input)
+
+  (generateCode input))
+
+
+
+(main test)
