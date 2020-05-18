@@ -14,8 +14,9 @@ func ParseTokens(tokens []*Token) *Program {
 	IDX = 0
 	program := NewProgram()
 	for len(tokens) > IDX {
-		node, _ := parseExpression(tokens)
-		program.AddSubNode(node)
+		node, err := parseExpression(tokens)
+		Check(err)
+		program.AddChildren(node)
 	}
 	return program
 }
@@ -40,7 +41,6 @@ func expect(tokens []*Token, expectedType TokenType) error {
 }
 
 func parseExpression(tokens []*Token) (AstNode, error) {
-	// try literals/idents first
 	currentType := tokens[IDX].Type
 	if currentType == TokenIntLiteral {
 		IDX++
@@ -73,13 +73,10 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 	if nil != lparenError {
 		return nil, lparenError
 	}
-	// jump past the lparen
+
 	IDX++
 	if accept(tokens, TokenOp) {
-		// grab the operator token so we can find out which one it is
 		opToken := tokens[IDX-1]
-		// parse the left-hand and right hand sides recursively
-		// this also takes care of handling nested expressions
 		lhs, lhsError := parseExpression(tokens)
 		if nil != lhsError {
 			return nil, lhsError
@@ -89,9 +86,8 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 			return nil, rhsError
 		}
 
-		// what sort of operator node do we want to build?
 		var expNode AstNode
-		switch opToken.Value.String() {
+		switch opToken.ValueStr {
 		case "+":
 			expNode = NewAddExp(lhs, rhs)
 		case "-":
@@ -111,8 +107,6 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 		case "=":
 			expNode = NewEqExp(lhs, rhs)
 		}
-
-		// make sure the expression has a closing rparen
 		expError := closeExp(tokens)
 		if nil != expError {
 			return nil, expError
@@ -124,7 +118,6 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 		identTokenValue := identToken.ValueStr
 		switch identTokenValue {
 		case "if":
-			// TODO: error-handling here (and throughout the parser!)
 			cond, _ := parseExpression(tokens)
 			ifTrue, _ := parseExpression(tokens)
 			ifFalse, _ := parseExpression(tokens)
@@ -134,6 +127,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 				return nil, expError
 			}
 			return ifNode, nil
+
 		case "define":
 			// are we attempting to define a function?
 			if accept(tokens, TokenLParen) {
@@ -152,6 +146,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 				lambdaNode := NewLambdaExp(funcArgs, lambdaExp)
 				defNode := NewDefExp(funcName, lambdaNode, Function)
 				return defNode, nil
+
 			} else {
 				// defining something besides a function
 				nameError := expect(tokens, TokenIdent)
@@ -197,10 +192,9 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 			return callNode, nil
 		}
 	}
-	return nil, errors.New("Unexpected token")
+	return nil, errors.New("unexpected token")
 }
 
-// convenience function to ensure an expression is properly closed
 func closeExp(tokens []*Token) error {
 	rparenError := expect(tokens, TokenRParen)
 	if nil != rparenError {
@@ -210,7 +204,6 @@ func closeExp(tokens []*Token) error {
 	return nil
 }
 
-// convenience function to parse the argument list for a function/lambda
 func parseArgs(tokens []*Token) ([]string, error) {
 	funcArgs := make([]string, 0)
 	for {

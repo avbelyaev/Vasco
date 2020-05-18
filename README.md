@@ -168,6 +168,7 @@ node lambdajam/sum.c.js
 ## Quick start Go
 
 - install GO go1.13.4 (darwin or linux)
+- set up $GOPATH
 - install package manager "dep"
 - install dep dependencies 
 - generate code `go run go-generator/main/generator.go go-generator/main/lexer.go go-generator/main/parser.go`

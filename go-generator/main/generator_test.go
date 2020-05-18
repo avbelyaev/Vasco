@@ -10,7 +10,7 @@ func TestDisplaySimple(t *testing.T) {
 
 	tokens := LexExp("(display 314)")
 	program := ParseTokens(tokens)
-	generated, _ := GenerateCode(program.GetSubNodes()[0])
+	generated, _ := GenerateCode(program.Children()[0])
 
 	assert.Equal(t, expected, generated)
 }
@@ -20,7 +20,7 @@ func TestDisplaySumInts(t *testing.T) {
 
 	tokens := LexExp("(display (+ 111 222))")
 	program := ParseTokens(tokens)
-	generated, _ := GenerateCode(program.GetSubNodes()[0])
+	generated, _ := GenerateCode(program.Children()[0])
 
 	assert.Equal(t, expected, generated)
 }

@@ -6,11 +6,11 @@ type LtExp struct {
 
 func NewLtExp(lhs AstNode, rhs AstNode) *LtExp {
 	node := new(LtExp)
-	node.AddSubNode(lhs)
-	node.AddSubNode(rhs)
+	node.AddChildren(lhs)
+	node.AddChildren(rhs)
 	return node
 }
-func (l LtExp) GetType() AstNodeType {
+func (l LtExp) Type() AstNodeType {
 	return LtNode
 }
 
@@ -20,11 +20,11 @@ type LteExp struct {
 
 func NewLteExp(lhs AstNode, rhs AstNode) *LteExp {
 	node := new(LteExp)
-	node.AddSubNode(lhs)
-	node.AddSubNode(rhs)
+	node.AddChildren(lhs)
+	node.AddChildren(rhs)
 	return node
 }
-func (l LteExp) GetType() AstNodeType {
+func (a LteExp) Type() AstNodeType {
 	return LteNode
 }
 
@@ -34,11 +34,11 @@ type GtExp struct {
 
 func NewGtExp(lhs AstNode, rhs AstNode) *GtExp {
 	node := new(GtExp)
-	node.AddSubNode(lhs)
-	node.AddSubNode(rhs)
+	node.AddChildren(lhs)
+	node.AddChildren(rhs)
 	return node
 }
-func (g GtExp) GetType() AstNodeType {
+func (a GtExp) Type() AstNodeType {
 	return GtNode
 }
 
@@ -48,11 +48,12 @@ type GteExp struct {
 
 func NewGteExp(lhs AstNode, rhs AstNode) *GteExp {
 	node := new(GteExp)
-	node.AddSubNode(lhs)
-	node.AddSubNode(rhs)
+	node.SExp.NodeID = NextNodeID()
+	node.AddChildren(lhs)
+	node.AddChildren(rhs)
 	return node
 }
-func (g GteExp) GetType() AstNodeType {
+func (a GteExp) Type() AstNodeType {
 	return LteNode
 }
 
@@ -62,10 +63,11 @@ type EqExp struct {
 
 func NewEqExp(lhs AstNode, rhs AstNode) *EqExp {
 	node := new(EqExp)
-	node.AddSubNode(lhs)
-	node.AddSubNode(rhs)
+	node.SExp.NodeID = NextNodeID()
+	node.AddChildren(lhs)
+	node.AddChildren(rhs)
 	return node
 }
-func (e EqExp) GetType() AstNodeType {
+func (a EqExp) Type() AstNodeType {
 	return EqNode
 }

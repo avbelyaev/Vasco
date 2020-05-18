@@ -7,14 +7,15 @@ type IntLiteral struct {
 
 func NewIntLiteral(value int64) *IntLiteral {
 	node := new(IntLiteral)
+	node.SExp.NodeID = NextNodeID()
 	node.Value = value
 	return node
 }
-func (i IntLiteral) GetType() AstNodeType {
+func (a IntLiteral) Type() AstNodeType {
 	return IntNode
 }
-func (i IntLiteral) GetValue() int64 {
-	return i.Value
+func (a IntLiteral) GetValue() int64 {
+	return a.Value
 }
 
 type FloatLiteral struct {
@@ -24,10 +25,11 @@ type FloatLiteral struct {
 
 func NewFloatLiteral(value float64) *FloatLiteral {
 	node := new(FloatLiteral)
+	node.SExp.NodeID = NextNodeID()
 	node.Value = value
 	return node
 }
-func (f FloatLiteral) GetType() AstNodeType {
+func (a FloatLiteral) Type() AstNodeType {
 	return FloatNode
 }
 
@@ -38,10 +40,11 @@ type StringLiteral struct {
 
 func NewStringLiteral(value string) *StringLiteral {
 	node := new(StringLiteral)
+	node.SExp.NodeID = NextNodeID()
 	node.Value = value
 	return node
 }
-func (s StringLiteral) GetType() AstNodeType {
+func (a StringLiteral) Type() AstNodeType {
 	return StringNode
 }
 
@@ -52,9 +55,10 @@ type BoolLiteral struct {
 
 func NewBoolLiteral(value bool) *BoolLiteral {
 	node := new(BoolLiteral)
+	node.SExp.NodeID = NextNodeID()
 	node.Value = value
 	return node
 }
-func (b BoolLiteral) GetType() AstNodeType {
+func (a BoolLiteral) Type() AstNodeType {
 	return BoolNode
 }

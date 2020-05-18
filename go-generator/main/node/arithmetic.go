@@ -7,12 +7,13 @@ type AddExp struct {
 
 func NewAddExp(lhs AstNode, rhs AstNode) *AddExp {
 	node := new(AddExp)
-	node.AddSubNode(lhs)
-	node.AddSubNode(rhs)
+	node.SExp.NodeID = NextNodeID()
+	node.AddChildren(lhs)
+	node.AddChildren(rhs)
 	node.Op = "+"
 	return node
 }
-func (a AddExp) GetType() AstNodeType {
+func (a AddExp) Type() AstNodeType {
 	return AddNode
 }
 
@@ -23,12 +24,13 @@ type SubExp struct {
 
 func NewSubExp(lhs AstNode, rhs AstNode) *SubExp {
 	node := new(SubExp)
-	node.AddSubNode(lhs)
-	node.AddSubNode(rhs)
+	node.SExp.NodeID = NextNodeID()
+	node.AddChildren(lhs)
+	node.AddChildren(rhs)
 	node.Op = "-"
 	return node
 }
-func (s SubExp) GetType() AstNodeType {
+func (a SubExp) Type() AstNodeType {
 	return SubNode
 }
 
@@ -39,12 +41,13 @@ type MulExp struct {
 
 func NewMulExp(lhs AstNode, rhs AstNode) *MulExp {
 	node := new(MulExp)
-	node.AddSubNode(lhs)
-	node.AddSubNode(rhs)
+	node.SExp.NodeID = NextNodeID()
+	node.AddChildren(lhs)
+	node.AddChildren(rhs)
 	node.Op = "*"
 	return node
 }
-func (m MulExp) GetType() AstNodeType {
+func (a MulExp) Type() AstNodeType {
 	return MulNode
 }
 
@@ -55,12 +58,12 @@ type DivExp struct {
 
 func NewDivExp(lhs AstNode, rhs AstNode) *DivExp {
 	node := new(DivExp)
-	node.AddSubNode(lhs)
-	node.AddSubNode(rhs)
+	node.SExp.NodeID = NextNodeID()
+	node.AddChildren(lhs)
+	node.AddChildren(rhs)
 	node.Op = "/"
 	return node
 }
-
-func (d DivExp) GetType() AstNodeType {
+func (d DivExp) Type() AstNodeType {
 	return DivNode
 }

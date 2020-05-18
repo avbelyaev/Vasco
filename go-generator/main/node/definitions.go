@@ -15,12 +15,13 @@ type DefExp struct {
 
 func NewDefExp(name string, exp AstNode, defType DefineType) *DefExp {
 	node := new(DefExp)
+	node.NodeID = NextNodeID()
 	node.Name = name
 	node.DefType = defType
-	node.AddSubNode(exp)
+	node.AddChildren(exp)
 	return node
 }
-func (d DefExp) GetType() AstNodeType {
+func (a DefExp) Type() AstNodeType {
 	return DefNode
 }
 
@@ -31,13 +32,15 @@ type LambdaExp struct {
 
 func NewLambdaExp(args []string, exp AstNode) *LambdaExp {
 	node := new(LambdaExp)
-	// copy to avoid the fact that the slice refers to data that could and will
-	// get overwritten
+	node.NodeID = NextNodeID()
 	node.Args = append([]string(nil), args...)
-	node.AddSubNode(exp)
+	node.AddChildren(exp)
 	return node
 }
-func (l LambdaExp) GetType() AstNodeType {
+func (a LambdaExp) ID() string {
+	return a.NodeID
+}
+func (a LambdaExp) Type() AstNodeType {
 	return LambdaNode
 }
 
@@ -48,9 +51,13 @@ type IdentExp struct {
 
 func NewIdentExp(name string) *IdentExp {
 	node := new(IdentExp)
+	node.NodeID = NextNodeID()
 	node.Name = name
 	return node
 }
-func (i IdentExp) GetType() AstNodeType {
+func (a IdentExp) ID() string {
+	return a.NodeID
+}
+func (a IdentExp) Type() AstNodeType {
 	return IdentNode
 }

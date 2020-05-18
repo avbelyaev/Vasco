@@ -1,5 +1,7 @@
 package node
 
+import "strconv"
+
 type AstNodeType int
 
 const (
@@ -24,23 +26,32 @@ const (
 	BoolNode
 )
 
-// base interface for functions needing to accept any kind of AST node
+var NodeCounter int
+
+func NextNodeID() string {
+	NodeCounter++
+	return "node_" + strconv.Itoa(NodeCounter)
+}
+
 type AstNode interface {
-	GetSubNodes() []AstNode
-	AddSubNode(AstNode)
-	GetType() AstNodeType
+	Children() []AstNode
+	AddChildren(AstNode)
+	Type() AstNodeType
 }
 
-// base struct that all AST node implementations build off of
 type SExp struct {
-	SubNodes []AstNode
+	NodeID       string
+	ChildrenList []AstNode
 }
 
-func (s *SExp) GetSubNodes() []AstNode {
-	return s.SubNodes
+func (s *SExp) ID() string {
+	return s.NodeID
 }
-func (s *SExp) AddSubNode(node AstNode) {
-	s.SubNodes = append(s.SubNodes, node)
+func (s *SExp) Children() []AstNode {
+	return s.ChildrenList
+}
+func (s *SExp) AddChildren(node AstNode) {
+	s.ChildrenList = append(s.ChildrenList, node)
 }
 
 type Program struct {
@@ -49,11 +60,12 @@ type Program struct {
 
 func NewProgram(nodes ...AstNode) *Program {
 	program := new(Program)
+	program.SExp.NodeID = NextNodeID()
 	for _, node := range nodes {
-		program.AddSubNode(node)
+		program.AddChildren(node)
 	}
 	return program
 }
-func (p Program) GetType() AstNodeType {
+func (p Program) Type() AstNodeType {
 	return ProgramNode
 }

@@ -21,17 +21,19 @@ var postfixStub = `
 }
 `
 
-var LAMBDA_IDX int
+var LambdaCounter int
+var ProgramRoot *Program
 
 func generateLambdaName() string {
-	LAMBDA_IDX++
-	return fmt.Sprintf("lambda%d", LAMBDA_IDX)
+	LambdaCounter++
+	return fmt.Sprintf("lambda%d", LambdaCounter)
 }
 
 func GenerateForEachRoot(program *Program) (string, error) {
-	LAMBDA_IDX = 0
+	LambdaCounter = 0
+	NodeCounter = 0
 	c := prefixStub
-	for _, root := range program.GetSubNodes() {
+	for _, root := range program.Children() {
 		generatedRoot, err := GenerateCode(root)
 		if nil != err {
 			return "", err
@@ -43,13 +45,13 @@ func GenerateForEachRoot(program *Program) (string, error) {
 }
 
 func GenerateCode(node AstNode) (string, error) {
-	nodeType := node.GetType()
+	nodeType := node.Type()
 	if nodeType == AddNode {
-		leftExprGenerated, err := GenerateCode(node.GetSubNodes()[0])
+		leftExprGenerated, err := GenerateCode(node.Children()[0])
 		if nil != err {
 			return "", err
 		}
-		rightExprGenerated, err := GenerateCode(node.GetSubNodes()[1])
+		rightExprGenerated, err := GenerateCode(node.Children()[1])
 		if nil != err {
 			return "", err
 		}
@@ -74,7 +76,7 @@ func GenerateCode(node AstNode) (string, error) {
 		lambdaName := generateLambdaName()
 		c := fmt.Sprintf("var %s func(interface{}) interface{}\n", lambdaName)
 		c += fmt.Sprintf("%s = func(x interface{}) interface{} {\n", lambdaName)
-		body, err := GenerateCode(lambda.GetSubNodes()[0])
+		body, err := GenerateCode(lambda.Children()[0])
 		if nil != err {
 			return "", err
 		}
@@ -83,21 +85,29 @@ func GenerateCode(node AstNode) (string, error) {
 
 	} else if nodeType == DefNode {
 		define := node.(*DefExp)
+
 		if define.DefType == Function {
+			funcName := define.Name
 			// extract lambda
-			lambda := define.GetSubNodes()[0].(*LambdaExp)
-			body, err := GenerateCode(lambda.GetSubNodes()[0])
+			lambda := define.Children()[0].(*LambdaExp)
+			body, err := GenerateCode(lambda.Children()[0])
 			if nil != err {
 				return "", err
 			}
-			c := fmt.Sprintf("var %s = func(x interface{}) {\n", define.Name)
+			// extract lambda args
+			argString := ""
+			for _, arg := range lambda.Args {
+				argString += fmt.Sprintf("%s interface{}, ", arg)
+			}
+			argString = argString[:len(argString)-2]
+			c := fmt.Sprintf("var %s = func(%s) {\n", funcName, argString)
 			c += body + "\n"
 			c += "}\n"
 			return c, nil
 
 		} else if define.DefType == Variable {
 			varName := define.Name
-			varValue, err := GenerateCode(define.GetSubNodes()[0])
+			varValue, err := GenerateCode(define.Children()[0])
 			if nil != err {
 				return "", err
 			}
@@ -111,7 +121,7 @@ func GenerateCode(node AstNode) (string, error) {
 		if callName == "display" {
 			callName = "fmt.Println"
 		}
-		callArgs, err := GenerateCode(call.GetSubNodes()[0])
+		callArgs, err := GenerateCode(call.Children()[0])
 		if nil != err {
 			return "", err
 		}
@@ -120,12 +130,6 @@ func GenerateCode(node AstNode) (string, error) {
 	}
 
 	return "", errors.New(fmt.Sprintf("unexpected node %v", node))
-}
-
-func check(e error) {
-	if e != nil {
-		panic(e)
-	}
 }
 
 func main() {
@@ -147,9 +151,16 @@ func main() {
 	//lambda5(3)
 	//lambda5("asda")
 
-	tokens := LexExp("(define (printer x) (display x)) (define pi 315) (printer pi)")
-	program := ParseTokens(tokens)
-	code, err := GenerateForEachRoot(program)
+	tokens := LexExp(`
+		(define (printer foo) 
+			(display (+ foo 1)))
+
+		(define pi 315) 
+
+		(printer pi)
+	`)
+	ProgramRoot = ParseTokens(tokens)
+	code, err := GenerateForEachRoot(ProgramRoot)
 	if nil != err {
 		print(err)
 	}
@@ -157,15 +168,17 @@ func main() {
 	outDir := "server/static"
 	if _, err := os.Stat(outDir); os.IsNotExist(err) {
 		err = os.Mkdir(outDir, 0700)
-		check(err)
+		Check(err)
 	}
 
 	fileName := path.Join(outDir, "out.go")
 	if _, err := os.Stat(fileName); os.IsExist(err) {
 		err = os.Remove(fileName)
-		check(err)
+		Check(err)
 	}
 
 	err = ioutil.WriteFile(fileName, []byte(code), 0666)
-	check(err)
+	Check(err)
+
+	fmt.Println("Emitted code:", code)
 }
