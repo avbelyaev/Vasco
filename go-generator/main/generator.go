@@ -97,7 +97,7 @@ func GenerateCode(node AstNode) (string, error) {
 			// extract lambda args
 			argString := ""
 			for _, arg := range lambda.Args {
-				argString += fmt.Sprintf("%s interface{}, ", arg)
+				argString += fmt.Sprintf("%s int, ", arg)
 			}
 			argString = argString[:len(argString)-2]
 			c := fmt.Sprintf("var %s = func(%s) {\n", funcName, argString)
