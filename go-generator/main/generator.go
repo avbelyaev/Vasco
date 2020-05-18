@@ -3,13 +3,15 @@ package main
 import (
 	"errors"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
 	"path"
+	"strings"
 	. "wascho/go-generator/main/node"
 )
 
-var prefixStub = `
+var programHeader = `
 package main
 
 import "fmt"
@@ -17,22 +19,41 @@ import "fmt"
 func main() {
 `
 
-var postfixStub = `
+var programFooter = `
+// avoiding unused import of "fmt"
+fmt.Println()
 }
 `
 
-var LambdaCounter int
 var ProgramRoot *Program
+var LambdaCounter int
+var identifierNames map[string]string
 
 func generateLambdaName() string {
 	LambdaCounter++
 	return fmt.Sprintf("lambda%d", LambdaCounter)
 }
 
+func GetIdentifier(name string) string {
+	if fixedName, exists := identifierNames[name]; exists {
+		return fixedName
+	}
+	if strings.Contains(name, "O") {
+		noReplacementLimit := -1
+		fixed := strings.Replace(name, "O", "_", noReplacementLimit)
+		log.Debugf("Fixed identifier: %s -> %s", name, fixed)
+
+		identifierNames[name] = fixed
+		return fixed
+	}
+	return name
+}
+
 func GenerateForEachRoot(program *Program) (string, error) {
+	identifierNames = make(map[string]string, 10)
 	LambdaCounter = 0
 	NodeCounter = 0
-	c := prefixStub
+	c := programHeader
 	for _, root := range program.Children() {
 		generatedRoot, err := GenerateCode(root)
 		if nil != err {
@@ -40,7 +61,7 @@ func GenerateForEachRoot(program *Program) (string, error) {
 		}
 		c += generatedRoot + "\n"
 	}
-	c += postfixStub
+	c += programFooter
 	return c, nil
 }
 
@@ -87,7 +108,7 @@ func GenerateCode(node AstNode) (string, error) {
 		define := node.(*DefExp)
 
 		if define.DefType == Function {
-			funcName := define.Name
+			funcName := GetIdentifier(define.Name)
 			// extract lambda
 			lambda := define.Children()[0].(*LambdaExp)
 			body, err := GenerateCode(lambda.Children()[0])
@@ -117,7 +138,7 @@ func GenerateCode(node AstNode) (string, error) {
 
 	} else if nodeType == CallNode {
 		call := node.(*CallExp)
-		callName := call.WhatToCall
+		callName := GetIdentifier(call.WhatToCall)
 		if callName == "display" {
 			callName = "fmt.Println"
 		}
@@ -152,12 +173,7 @@ func main() {
 	//lambda5("asda")
 
 	tokens := LexExp(`
-		(define (printer foo) 
-			(display (+ foo 1)))
-
-		(define pi 315) 
-
-		(printer pi)
+		(define (myObs x) (+ x 1)) (myObs x)
 	`)
 	ProgramRoot = ParseTokens(tokens)
 	code, err := GenerateForEachRoot(ProgramRoot)

@@ -10,6 +10,14 @@
   version = "v1.1.1"
 
 [[projects]]
+  digest = "1:09cb61dc19af93deae01587e2fdb1c081e0bf48f1a5ad5fa24f48750dc57dce8"
+  name = "github.com/konsorten/go-windows-terminal-sequences"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "edb144dfd453055e1e49a3d8b410a660b5a87613"
+  version = "v1.0.3"
+
+[[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
@@ -18,12 +26,31 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:05eebdd5727fea23083fce0d98d307d70c86baed644178e81608aaa9f09ea469"
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "60c74ad9be0d874af0ab0daef6ab07c5c5911f0d"
+  version = "v1.6.0"
+
+[[projects]]
   digest = "1:5e8f46b412421d2d6cceea845d28ac46f3f5a5f60a6e86f0ee75e24fd43a02a9"
   name = "github.com/stretchr/testify"
   packages = ["assert"]
   pruneopts = "UT"
   revision = "3ebf1ddaeb260c4b1ae502a01c7844fa8c1fa0e9"
   version = "v1.5.1"
+
+[[projects]]
+  branch = "master"
+  digest = "1:020620a097c2bfd056c8db7d31a69ea2cfed874ce985763dcd9ae00f9fa5f74b"
+  name = "golang.org/x/sys"
+  packages = [
+    "internal/unsafeheader",
+    "unix",
+  ]
+  pruneopts = "UT"
+  revision = "1151b9dac4a98d49ef7f80f07ddd826ff51e0b36"
 
 [[projects]]
   digest = "1:d7f1bd887dc650737a421b872ca883059580e9f8314d601f88025df4f4802dce"
@@ -36,6 +63,9 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  input-imports = ["github.com/stretchr/testify/assert"]
+  input-imports = [
+    "github.com/sirupsen/logrus",
+    "github.com/stretchr/testify/assert",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

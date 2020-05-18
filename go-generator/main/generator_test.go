@@ -14,6 +14,8 @@ import "fmt"
 func main() {
 fmt.Println(314)
 
+// avoiding unused import of "fmt"
+fmt.Println()
 }
 `
 	tokens := LexExp("(display 314)")
@@ -32,6 +34,8 @@ import "fmt"
 func main() {
 fmt.Println(111 + 222)
 
+// avoiding unused import of "fmt"
+fmt.Println()
 }
 `
 	tokens := LexExp("(display (+ 111 222))")
@@ -56,6 +60,8 @@ var pi = 314
 
 printer(pi)
 
+// avoiding unused import of "fmt"
+fmt.Println()
 }
 `
 	tokens := LexExp(`
@@ -71,3 +77,5 @@ printer(pi)
 
 	assert.Equal(t, expected, generated)
 }
+
+// TODO test mangle name my-abs -> my_abs
