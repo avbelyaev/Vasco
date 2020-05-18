@@ -6,6 +6,7 @@ type LtExp struct {
 
 func NewLtExp(lhs AstNode, rhs AstNode) *LtExp {
 	node := new(LtExp)
+	node.SExp.NodeID = NextNodeID()
 	node.AddChildren(lhs)
 	node.AddChildren(rhs)
 	return node
@@ -20,6 +21,7 @@ type LteExp struct {
 
 func NewLteExp(lhs AstNode, rhs AstNode) *LteExp {
 	node := new(LteExp)
+	node.SExp.NodeID = NextNodeID()
 	node.AddChildren(lhs)
 	node.AddChildren(rhs)
 	return node
@@ -34,6 +36,7 @@ type GtExp struct {
 
 func NewGtExp(lhs AstNode, rhs AstNode) *GtExp {
 	node := new(GtExp)
+	node.SExp.NodeID = NextNodeID()
 	node.AddChildren(lhs)
 	node.AddChildren(rhs)
 	return node

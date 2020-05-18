@@ -41,7 +41,7 @@ func GetIdentifier(name string) string {
 	if strings.Contains(name, "O") {
 		noReplacementLimit := -1
 		fixed := strings.Replace(name, "O", "_", noReplacementLimit)
-		log.Debugf("Fixed identifier: %s -> %s", name, fixed)
+		log.Infof("Fixed identifier: %s -> %s", name, fixed)
 
 		identifierNames[name] = fixed
 		return fixed
@@ -67,16 +67,31 @@ func GenerateForEachRoot(program *Program) (string, error) {
 
 func GenerateCode(node AstNode) (string, error) {
 	nodeType := node.Type()
-	if nodeType == AddNode {
-		leftExprGenerated, err := GenerateCode(node.Children()[0])
+	if IsArithmetic(&node) {
+		lhsString, err := GenerateCode(node.Children()[0])
 		if nil != err {
 			return "", err
 		}
-		rightExprGenerated, err := GenerateCode(node.Children()[1])
+		rhsString, err := GenerateCode(node.Children()[1])
 		if nil != err {
 			return "", err
 		}
-		c := leftExprGenerated + " + " + rightExprGenerated
+		opeartor := GetOperator(&node)
+		c := fmt.Sprintf("%s %s %s", lhsString, opeartor, rhsString)
+		return c, nil
+
+		// TODO maybe merge arithmetic & comparison
+	} else if IsComparison(&node) {
+		lhsString, err := GenerateCode(node.Children()[0])
+		if nil != err {
+			return "", err
+		}
+		rhsString, err := GenerateCode(node.Children()[1])
+		if nil != err {
+			return "", err
+		}
+		opeartor := GetOperator(&node)
+		c := fmt.Sprintf("%s %s %s", lhsString, opeartor, rhsString)
 		return c, nil
 
 	} else if nodeType == IntNode {
@@ -148,9 +163,41 @@ func GenerateCode(node AstNode) (string, error) {
 		}
 		c := fmt.Sprintf("%s(%s)", callName, callArgs)
 		return c, nil
+
+	} else if nodeType == IfNode {
+		branch := node.(*IfExp)
+		condString, err := GenerateCode(branch.Cond)
+		if nil != err {
+			return "", err
+		}
+		thenString, err := GenerateCode(branch.Then)
+		if nil != err {
+			return "", err
+		}
+		elseString, err := GenerateCode(branch.Else)
+		if nil != err {
+			return "", err
+		}
+		c := fmt.Sprintf("if %s {\n", condString)
+		c += fmt.Sprintf("\t%s\n", thenString)
+		c += fmt.Sprintf("} else {\n")
+		c += fmt.Sprintf("\t%s\n", elseString)
+		c += fmt.Sprintf("}")
+		return c, err
 	}
 
 	return "", errors.New(fmt.Sprintf("unexpected node %v", node))
+}
+
+type Value struct {
+	value interface{}
+}
+
+func NewValue(v interface{}) *Value {
+	value := &Value{
+		value: v,
+	}
+	return value
 }
 
 func main() {
@@ -173,10 +220,14 @@ func main() {
 	//lambda5("asda")
 
 	tokens := LexExp(`
-		(define (myObs x) (+ x 1)) (myObs x)
+		(define (myAbs x)
+  			(if (< x 0) (display 111) (display 222)))
+
+		(myAbs 1)
 	`)
-	ProgramRoot = ParseTokens(tokens)
-	code, err := GenerateForEachRoot(ProgramRoot)
+	root := ParseTokens(tokens)
+	ProgramRoot = root
+	code, err := GenerateForEachRoot(root)
 	if nil != err {
 		print(err)
 	}

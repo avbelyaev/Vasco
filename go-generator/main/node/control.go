@@ -2,6 +2,9 @@ package node
 
 type IfExp struct {
 	SExp
+	Cond AstNode
+	Then AstNode
+	Else AstNode
 }
 
 func NewIfExp(cond AstNode, onTrue AstNode, onFalse AstNode) *IfExp {
@@ -10,6 +13,9 @@ func NewIfExp(cond AstNode, onTrue AstNode, onFalse AstNode) *IfExp {
 	node.AddChildren(cond)
 	node.AddChildren(onTrue)
 	node.AddChildren(onFalse)
+	node.Cond = cond
+	node.Then = onTrue
+	node.Else = onFalse
 	return node
 }
 func (a IfExp) Type() AstNodeType {
