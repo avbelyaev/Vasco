@@ -132,7 +132,9 @@ func GenerateCode(node AstNode) (string, error) {
 				argString += fmt.Sprintf("%s int, ", arg)
 			}
 			argString = argString[:len(argString)-2]
-			c := fmt.Sprintf("var %s = func(%s) int {\n", funcName, argString)
+			// to be able to make recursive call
+			c := fmt.Sprintf("var %s func(%s) int\n", funcName, argString)
+			c += fmt.Sprintf("%s = func(%s) int {\n", funcName, argString)
 
 			// extract body expect last one expr
 			var i = 0
@@ -144,13 +146,16 @@ func GenerateCode(node AstNode) (string, error) {
 				}
 				c += exprString + "\n"
 			}
-			// manually extract last expr
+
+			// TODO is leaf-node, manually extract last expr
 			lastExpr, err := GenerateCode(lambda.Children()[i])
 			if nil != err {
 				return "", err
 			}
-			c += fmt.Sprintf("var last = %s\n", lastExpr)
-			c += fmt.Sprint("return last\n}\n")
+			c += lastExpr + "\n"
+			//c += fmt.Sprintf("var last = %s\n", lastExpr)
+			//c += fmt.Sprint("return last\n}\n")
+			c += "}\n"
 			return c, nil
 
 		} else if defNode.DefType == Variable {
@@ -180,22 +185,33 @@ func GenerateCode(node AstNode) (string, error) {
 
 	} else if nodeType == IfNode {
 		branch := node.(*IfExp)
+		// condition
 		condString, err := GenerateCode(branch.Cond)
 		if nil != err {
 			return "", err
 		}
-		thenString, err := GenerateCode(branch.Then)
-		if nil != err {
-			return "", err
-		}
-		elseString, err := GenerateCode(branch.Else)
-		if nil != err {
-			return "", err
-		}
 		c := fmt.Sprintf("if %s {\n", condString)
-		c += fmt.Sprintf("\t%s\n", thenString)
+
+		// then
+		if IsLeaf(branch.Then) {
+			thenString, err := GenerateCode(branch.Then)
+			if nil != err {
+				return "", err
+			}
+			c += fmt.Sprintf("var last = %s\n", thenString)
+			c += fmt.Sprint("return last\n")
+		}
 		c += fmt.Sprintf("} else {\n")
-		c += fmt.Sprintf("\t%s\n", elseString)
+
+		// else
+		if IsLeaf(branch.Else) {
+			elseString, err := GenerateCode(branch.Else)
+			if nil != err {
+				return "", err
+			}
+			c += fmt.Sprintf("var last = %s\n", elseString)
+			c += fmt.Sprint("return last\n")
+		}
 		c += fmt.Sprintf("}")
 		return c, err
 	}
@@ -215,17 +231,13 @@ func NewValue(v interface{}) *Value {
 }
 
 func main() {
-	var identity = func(x int) int {
-		var last = x
-		return last
-	}
-	_ = identity(5)
 	tokens := LexExp(`
-		(define identity
-			(lambda (foo)
-				foo))
+		(define (fact n)
+  			(if (= n 0)
+      				1
+      				(* n (fact (- n 1)))))
 
-		(display (identity 5))
+		(display (fact 5))
 	`)
 	root := ParseTokens(tokens)
 	ProgramRoot = root

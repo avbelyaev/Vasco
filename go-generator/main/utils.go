@@ -8,9 +8,9 @@ func Check(e error) {
 	}
 }
 
-//func GetParentNode(node *node.AstNode) *node.AstNode {
-//
-//}
+func IsLeaf(nNode node.AstNode) bool {
+	return true
+}
 
 func IsComparison(nNode *node.AstNode) bool {
 	nodeType := (*nNode).Type()
