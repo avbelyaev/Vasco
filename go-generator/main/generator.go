@@ -3,11 +3,16 @@ package main
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
 	. "wascho/go-generator/main/node"
 )
 
 var prefixStub = `
 package main
+
+import "fmt"
 
 func main() {
 `
@@ -56,6 +61,10 @@ func GenerateCode(node AstNode) (string, error) {
 		c := fmt.Sprintf("%d", intNode.Value)
 		return c, nil
 
+	} else if nodeType == IdentNode {
+		ident := node.(*IdentExp)
+		return ident.Name, nil
+
 	} else if nodeType == LambdaNode {
 		lambda := node.(*LambdaExp)
 		args := ""
@@ -81,20 +90,26 @@ func GenerateCode(node AstNode) (string, error) {
 			if nil != err {
 				return "", err
 			}
-			c := fmt.Sprintf("func %s (x interface{}) {\n", define.Name)
+			c := fmt.Sprintf("var %s = func(x interface{}) {\n", define.Name)
 			c += body + "\n"
 			c += "}\n"
 			return c, nil
 
 		} else if define.DefType == Variable {
-
+			varName := define.Name
+			varValue, err := GenerateCode(define.GetSubNodes()[0])
+			if nil != err {
+				return "", err
+			}
+			c := fmt.Sprintf("var %s = %s\n", varName, varValue)
+			return c, nil
 		}
 
 	} else if nodeType == CallNode {
 		call := node.(*CallExp)
 		callName := call.WhatToCall
 		if callName == "display" {
-			callName = "print"
+			callName = "fmt.Println"
 		}
 		callArgs, err := GenerateCode(call.GetSubNodes()[0])
 		if nil != err {
@@ -105,6 +120,12 @@ func GenerateCode(node AstNode) (string, error) {
 	}
 
 	return "", errors.New(fmt.Sprintf("unexpected node %v", node))
+}
+
+func check(e error) {
+	if e != nil {
+		panic(e)
+	}
 }
 
 func main() {
@@ -123,14 +144,28 @@ func main() {
 		}
 		return 0
 	}
-	lambda5(3)
-	lambda5("asda")
+	//lambda5(3)
+	//lambda5("asda")
 
-	tokens := LexExp("(define (printer x) (display 3)) (printer 5)")
+	tokens := LexExp("(define (printer x) (display x)) (define pi 315) (printer pi)")
 	program := ParseTokens(tokens)
 	code, err := GenerateForEachRoot(program)
 	if nil != err {
 		print(err)
 	}
-	print(code)
+
+	outDir := "server/static"
+	if _, err := os.Stat(outDir); os.IsNotExist(err) {
+		err = os.Mkdir(outDir, 0700)
+		check(err)
+	}
+
+	fileName := path.Join(outDir, "out.go")
+	if _, err := os.Stat(fileName); os.IsExist(err) {
+		err = os.Remove(fileName)
+		check(err)
+	}
+
+	err = ioutil.WriteFile(fileName, []byte(code), 0666)
+	check(err)
 }

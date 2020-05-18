@@ -120,6 +120,8 @@ node print.c.js
 
 - web server: https://lisp.sh/crud-web-api-in-racket/
 
+- Go -> WASM: https://medium.com/@sendilkumarn/getting-started-into-go-and-webassembly-8491b133a616
+
 
 # desugar. how to
 
@@ -161,3 +163,21 @@ cd ..
 node lambdajam/sum.c.js 
 #> 333
 ```
+
+
+## Quick start Go
+
+- install GO go1.13.4 (darwin or linux)
+- install package manager "dep"
+- install dep dependencies 
+- generate code `go run go-generator/main/generator.go go-generator/main/lexer.go go-generator/main/parser.go`
+- get bindings from your GO distribution (`$GO/misc/wasm`)
+  - `wasm_exec.html`
+  - `wasm_exe.js` 
+- go to server/static and generate module
+  - `GOARCH=wasm GOOS=js go build -o server/static/out.wasm server/static/out.go`
+- run server
+  - `go run server.go`
+- navigate to `http://localhost:9999/`
+- open `wasm_exec.html` and open Dev console
+- hit "Run" and see console
