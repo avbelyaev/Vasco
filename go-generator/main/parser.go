@@ -7,10 +7,11 @@ import (
 	. "wascho/go-generator/main/node"
 )
 
-var IDX = 0
+var IDX int
 
 // ParseTokens takes tokens and returns an AST (Abstract Syntax Tree) representation
 func ParseTokens(tokens []*Token) *Program {
+	IDX = 0
 	program := NewProgram()
 	for len(tokens) > IDX {
 		node, _ := parseExpression(tokens)

@@ -1,15 +1,10 @@
 package node
 
-import (
-	"fmt"
-	"strings"
-)
-
-type DefineType int
+type DefineType string
 
 const (
-	Function DefineType = iota
-	Variable
+	Function DefineType = "func"
+	Variable DefineType = "var"
 )
 
 type DefExp struct {
@@ -27,9 +22,6 @@ func NewDefExp(name string, exp AstNode, defType DefineType) *DefExp {
 }
 func (d DefExp) GetType() AstNodeType {
 	return DefNode
-}
-func (d DefExp) String() string {
-	return "DefExp(" + d.Name + ", " + d.SubNodes[0].String() + ")"
 }
 
 type LambdaExp struct {
@@ -49,10 +41,6 @@ func (l LambdaExp) GetType() AstNodeType {
 	return LambdaNode
 }
 
-func (l LambdaExp) String() string {
-	return "LambdaExp(" + strings.Trim(fmt.Sprintf("%v", l.Args), "[]") + ", " + l.SubNodes[0].String() + ")"
-}
-
 type IdentExp struct {
 	SExp
 	Name string
@@ -65,7 +53,4 @@ func NewIdentExp(name string) *IdentExp {
 }
 func (i IdentExp) GetType() AstNodeType {
 	return IdentNode
-}
-func (i IdentExp) String() string {
-	return i.Name
 }

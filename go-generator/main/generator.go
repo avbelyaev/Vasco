@@ -16,7 +16,7 @@ var postfixStub = `
 }
 `
 
-var LAMBDA_IDX = 0
+var LAMBDA_IDX int
 
 func generateLambdaName() string {
 	LAMBDA_IDX++
@@ -24,6 +24,7 @@ func generateLambdaName() string {
 }
 
 func GenerateForEachRoot(program *Program) (string, error) {
+	LAMBDA_IDX = 0
 	c := prefixStub
 	for _, root := range program.GetSubNodes() {
 		generatedRoot, err := GenerateCode(root)
@@ -51,8 +52,9 @@ func GenerateCode(node AstNode) (string, error) {
 		return c, nil
 
 	} else if nodeType == IntNode {
-		toEmit := node.String()
-		return toEmit, nil
+		intNode := node.(*IntLiteral)
+		c := fmt.Sprintf("%d", intNode.Value)
+		return c, nil
 
 	} else if nodeType == LambdaNode {
 		lambda := node.(*LambdaExp)
@@ -102,7 +104,7 @@ func GenerateCode(node AstNode) (string, error) {
 		return c, nil
 	}
 
-	return "", errors.New(fmt.Sprintf("unexpected node %s", node.String()))
+	return "", errors.New(fmt.Sprintf("unexpected node %v", node))
 }
 
 func main() {

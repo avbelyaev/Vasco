@@ -1,7 +1,5 @@
 package node
 
-import "strconv"
-
 type IntLiteral struct {
 	SExp
 	Value int64
@@ -14,9 +12,6 @@ func NewIntLiteral(value int64) *IntLiteral {
 }
 func (i IntLiteral) GetType() AstNodeType {
 	return IntNode
-}
-func (i IntLiteral) String() string {
-	return strconv.FormatInt(i.Value, 10)
 }
 func (i IntLiteral) GetValue() int64 {
 	return i.Value
@@ -35,9 +30,6 @@ func NewFloatLiteral(value float64) *FloatLiteral {
 func (f FloatLiteral) GetType() AstNodeType {
 	return FloatNode
 }
-func (f FloatLiteral) String() string {
-	return strconv.FormatFloat(f.Value, 'g', -1, 64)
-}
 
 type StringLiteral struct {
 	SExp
@@ -52,9 +44,6 @@ func NewStringLiteral(value string) *StringLiteral {
 func (s StringLiteral) GetType() AstNodeType {
 	return StringNode
 }
-func (s StringLiteral) String() string {
-	return "\"" + s.Value + "\""
-}
 
 type BoolLiteral struct {
 	SExp
@@ -68,7 +57,4 @@ func NewBoolLiteral(value bool) *BoolLiteral {
 }
 func (b BoolLiteral) GetType() AstNodeType {
 	return BoolNode
-}
-func (b BoolLiteral) String() string {
-	return strconv.FormatBool(b.Value)
 }

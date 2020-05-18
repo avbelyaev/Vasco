@@ -29,7 +29,6 @@ type AstNode interface {
 	GetSubNodes() []AstNode
 	AddSubNode(AstNode)
 	GetType() AstNodeType
-	String() string
 }
 
 // base struct that all AST node implementations build off of

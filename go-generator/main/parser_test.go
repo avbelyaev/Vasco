@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 	. "wascho/go-generator/main/node"
 )
@@ -8,11 +9,7 @@ import (
 func checkProgram(program *Program, expectedProgram *Program, t *testing.T) {
 	for i, subNode := range program.GetSubNodes() {
 		expectedSubNode := expectedProgram.SubNodes[i]
-		if expectedSubNode.GetType() != subNode.GetType() {
-			t.Error("Parser type error, expected:\n" + expectedSubNode.String() + "\nGot:\n" + subNode.String())
-		} else if expectedSubNode.String() != subNode.String() {
-			t.Error("Parser value error, expected:\n" + expectedSubNode.String() + "\nGot:\n" + subNode.String())
-		}
+		assert.Equal(t, expectedSubNode.GetType(), subNode.GetType())
 	}
 }
 
@@ -89,7 +86,7 @@ func TestIfExp(t *testing.T) {
 func TestDefineExp(t *testing.T) {
 	tokens := LexExp("(define x 5)")
 	program := ParseTokens(tokens)
-	expectedProgram := NewProgram(NewDefExp("x", NewIntLiteral(5)))
+	expectedProgram := NewProgram(NewDefExp("x", NewIntLiteral(5), Variable))
 	checkProgram(program, expectedProgram, t)
 }
 
@@ -103,7 +100,7 @@ func TestLambdaExp(t *testing.T) {
 func TestDefLambdaExp(t *testing.T) {
 	tokens := LexExp("(define (square x) (* x x))")
 	program := ParseTokens(tokens)
-	expectedProgram := NewProgram(NewDefExp("square", NewLambdaExp([]string{"x"}, NewMulExp(NewIdentExp("x"), NewIdentExp("x")))))
+	expectedProgram := NewProgram(NewDefExp("square", NewLambdaExp([]string{"x"}, NewMulExp(NewIdentExp("x"), NewIdentExp("x"))), Function))
 	checkProgram(program, expectedProgram, t)
 }
 
@@ -112,7 +109,7 @@ func TestDefLambdaLonghandExp(t *testing.T) {
 	shorthandProgram := ParseTokens(shorthandTokens)
 	longhandTokens := LexExp("(define mul (lambda (x y) (* x y)))")
 	longhandProgram := ParseTokens(longhandTokens)
-	expectedProgram := NewProgram(NewDefExp("mul", NewLambdaExp([]string{"x", "y"}, NewMulExp(NewIdentExp("x"), NewIdentExp("y")))))
+	expectedProgram := NewProgram(NewDefExp("mul", NewLambdaExp([]string{"x", "y"}, NewMulExp(NewIdentExp("x"), NewIdentExp("y"))), Function))
 	checkProgram(shorthandProgram, expectedProgram, t)
 	checkProgram(longhandProgram, expectedProgram, t)
 }
