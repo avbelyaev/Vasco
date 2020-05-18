@@ -14,9 +14,6 @@ func NewIntLiteral(value int64) *IntLiteral {
 func (a IntLiteral) Type() AstNodeType {
 	return IntNode
 }
-func (a IntLiteral) GetValue() int64 {
-	return a.Value
-}
 
 type FloatLiteral struct {
 	SExp

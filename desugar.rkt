@@ -1,15 +1,14 @@
+#lang racket
 ; since this file is included, it should NOT be a module -> no "#lang racket"
-; #lang racket
+
 
 
 ; program being desugared
 ; TODO: read from stdin
 (define test 
 	'(
-	  (define (leSummator x)
-  (let ((y 123)
-        (z 456))
-    (+ x y z)))
+	  define (my-abs x)
+        (if (< x 0) -1 1)
 	))
 
 
@@ -161,15 +160,15 @@
 	
 
 
-; (define (main)
-; 	(displayln "desugaring...")
-; 	(define desugared (desugar (read)))
+ (define (main)
+ 	(displayln "desugaring...")
+ 	(define desugared (desugar test))
 
-; 	(displayln "-------------------")
-; 	(pretty-write desugared))
+ 	(displayln "-------------------")
+	(pretty-write desugared))
 
 
 
-; (main)
+(main )
 
 

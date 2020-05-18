@@ -1061,7 +1061,7 @@ Value __numEqual ;
 
   ;; Emit primitive procedures:
   (emit 
-   "Value __prim_sum(Value e, Value a, Value b) {
+   "Value __prim_sum(Value e, Value a, Value b) { 
   return MakeInt(a.z.value + b.z.value) ;
 }")
   

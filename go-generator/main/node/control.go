@@ -10,9 +10,9 @@ type IfExp struct {
 func NewIfExp(cond AstNode, onTrue AstNode, onFalse AstNode) *IfExp {
 	node := new(IfExp)
 	node.SExp.NodeID = NextNodeID()
-	node.AddChildren(cond)
-	node.AddChildren(onTrue)
-	node.AddChildren(onFalse)
+	node.AddChild(cond)
+	node.AddChild(onTrue)
+	node.AddChild(onFalse)
 	node.Cond = cond
 	node.Then = onTrue
 	node.Else = onFalse
@@ -30,7 +30,7 @@ type CallExp struct {
 func NewCallExpr(whatToCall string, callArg AstNode) *CallExp {
 	node := new(CallExp)
 	node.SExp.NodeID = NextNodeID()
-	node.AddChildren(callArg)
+	node.AddChild(callArg)
 	node.WhatToCall = whatToCall
 	return node
 }

@@ -8,8 +8,8 @@ type AddExp struct {
 func NewAddExp(lhs AstNode, rhs AstNode) *AddExp {
 	node := new(AddExp)
 	node.SExp.NodeID = NextNodeID()
-	node.AddChildren(lhs)
-	node.AddChildren(rhs)
+	node.AddChild(lhs)
+	node.AddChild(rhs)
 	node.Op = "+"
 	return node
 }
@@ -25,8 +25,8 @@ type SubExp struct {
 func NewSubExp(lhs AstNode, rhs AstNode) *SubExp {
 	node := new(SubExp)
 	node.SExp.NodeID = NextNodeID()
-	node.AddChildren(lhs)
-	node.AddChildren(rhs)
+	node.AddChild(lhs)
+	node.AddChild(rhs)
 	node.Op = "-"
 	return node
 }
@@ -42,8 +42,8 @@ type MulExp struct {
 func NewMulExp(lhs AstNode, rhs AstNode) *MulExp {
 	node := new(MulExp)
 	node.SExp.NodeID = NextNodeID()
-	node.AddChildren(lhs)
-	node.AddChildren(rhs)
+	node.AddChild(lhs)
+	node.AddChild(rhs)
 	node.Op = "*"
 	return node
 }
@@ -59,8 +59,8 @@ type DivExp struct {
 func NewDivExp(lhs AstNode, rhs AstNode) *DivExp {
 	node := new(DivExp)
 	node.SExp.NodeID = NextNodeID()
-	node.AddChildren(lhs)
-	node.AddChildren(rhs)
+	node.AddChild(lhs)
+	node.AddChild(rhs)
 	node.Op = "/"
 	return node
 }

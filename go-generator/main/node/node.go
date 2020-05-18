@@ -35,7 +35,7 @@ func NextNodeID() string {
 
 type AstNode interface {
 	Children() []AstNode
-	AddChildren(AstNode)
+	AddChild(AstNode)
 	Type() AstNodeType
 }
 
@@ -50,7 +50,7 @@ func (s *SExp) ID() string {
 func (s *SExp) Children() []AstNode {
 	return s.ChildrenList
 }
-func (s *SExp) AddChildren(node AstNode) {
+func (s *SExp) AddChild(node AstNode) {
 	s.ChildrenList = append(s.ChildrenList, node)
 }
 
@@ -62,7 +62,7 @@ func NewProgram(nodes ...AstNode) *Program {
 	program := new(Program)
 	program.SExp.NodeID = NextNodeID()
 	for _, node := range nodes {
-		program.AddChildren(node)
+		program.AddChild(node)
 	}
 	return program
 }

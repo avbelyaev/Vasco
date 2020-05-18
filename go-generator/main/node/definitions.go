@@ -18,7 +18,7 @@ func NewDefExp(name string, exp AstNode, defType DefineType) *DefExp {
 	node.NodeID = NextNodeID()
 	node.Name = name
 	node.DefType = defType
-	node.AddChildren(exp)
+	node.AddChild(exp)
 	return node
 }
 func (a DefExp) Type() AstNodeType {
@@ -30,15 +30,14 @@ type LambdaExp struct {
 	Args []string
 }
 
-func NewLambdaExp(args []string, exp AstNode) *LambdaExp {
+func NewLambdaExp(args []string, expressions []AstNode) *LambdaExp {
 	node := new(LambdaExp)
 	node.NodeID = NextNodeID()
 	node.Args = append([]string(nil), args...)
-	node.AddChildren(exp)
+	for _, expr := range expressions {
+		node.AddChild(expr)
+	}
 	return node
-}
-func (a LambdaExp) ID() string {
-	return a.NodeID
 }
 func (a LambdaExp) Type() AstNodeType {
 	return LambdaNode
@@ -54,9 +53,6 @@ func NewIdentExp(name string) *IdentExp {
 	node.NodeID = NextNodeID()
 	node.Name = name
 	return node
-}
-func (a IdentExp) ID() string {
-	return a.NodeID
 }
 func (a IdentExp) Type() AstNodeType {
 	return IdentNode

@@ -120,30 +120,42 @@ func GenerateCode(node AstNode) (string, error) {
 		c += "}"
 
 	} else if nodeType == DefNode {
-		define := node.(*DefExp)
+		defNode := node.(*DefExp)
 
-		if define.DefType == Function {
-			funcName := GetIdentifier(define.Name)
-			// extract lambda
-			lambda := define.Children()[0].(*LambdaExp)
-			body, err := GenerateCode(lambda.Children()[0])
-			if nil != err {
-				return "", err
-			}
-			// extract lambda args
+		if defNode.DefType == Function {
+			lambda := defNode.Children()[0].(*LambdaExp)
+			funcName := GetIdentifier(defNode.Name)
+
+			// extract args
 			argString := ""
 			for _, arg := range lambda.Args {
 				argString += fmt.Sprintf("%s int, ", arg)
 			}
 			argString = argString[:len(argString)-2]
-			c := fmt.Sprintf("var %s = func(%s) {\n", funcName, argString)
-			c += body + "\n"
-			c += "}\n"
+			c := fmt.Sprintf("var %s = func(%s) int {\n", funcName, argString)
+
+			// extract body expect last one expr
+			var i = 0
+			for i = 0; i < len(lambda.Children())-1; i++ {
+				expr := lambda.Children()[i]
+				exprString, err := GenerateCode(expr)
+				if nil != err {
+					return "", err
+				}
+				c += exprString + "\n"
+			}
+			// manually extract last expr
+			lastExpr, err := GenerateCode(lambda.Children()[i])
+			if nil != err {
+				return "", err
+			}
+			c += fmt.Sprintf("var last = %s\n", lastExpr)
+			c += fmt.Sprint("return last\n}\n")
 			return c, nil
 
-		} else if define.DefType == Variable {
-			varName := define.Name
-			varValue, err := GenerateCode(define.Children()[0])
+		} else if defNode.DefType == Variable {
+			varName := defNode.Name
+			varValue, err := GenerateCode(defNode.Children()[0])
 			if nil != err {
 				return "", err
 			}
@@ -155,6 +167,8 @@ func GenerateCode(node AstNode) (string, error) {
 		call := node.(*CallExp)
 		callName := GetIdentifier(call.WhatToCall)
 		if callName == "display" {
+			callName = "fmt.Print"
+		} else if callName == "displayln" {
 			callName = "fmt.Println"
 		}
 		callArgs, err := GenerateCode(call.Children()[0])
@@ -201,29 +215,17 @@ func NewValue(v interface{}) *Value {
 }
 
 func main() {
-	var lambda5 func(interface{}) interface{}
-	lambda5 = func(x interface{}) interface{} {
-		switch x.(type) {
-		case string:
-			return fmt.Sprintf("%v_str", x)
-		case int:
-			fmt.Printf("%d\n", x.(int))
-			if x.(int) < 500 {
-				return lambda5(x.(int) + 100).(int)
-			} else {
-				return 0
-			}
-		}
-		return 0
+	var identity = func(x int) int {
+		var last = x
+		return last
 	}
-	//lambda5(3)
-	//lambda5("asda")
-
+	_ = identity(5)
 	tokens := LexExp(`
-		(define (myAbs x)
-  			(if (< x 0) (display 111) (display 222)))
+		(define identity
+			(lambda (foo)
+				foo))
 
-		(myAbs 1)
+		(display (identity 5))
 	`)
 	root := ParseTokens(tokens)
 	ProgramRoot = root
@@ -232,6 +234,11 @@ func main() {
 		print(err)
 	}
 
+	emitCode(code)
+	log.Infof("Emitted code:\n%s", code)
+}
+
+func emitCode(code string) {
 	outDir := "server/static"
 	if _, err := os.Stat(outDir); os.IsNotExist(err) {
 		err = os.Mkdir(outDir, 0700)
@@ -244,8 +251,6 @@ func main() {
 		Check(err)
 	}
 
-	err = ioutil.WriteFile(fileName, []byte(code), 0666)
+	err := ioutil.WriteFile(fileName, []byte(code), 0666)
 	Check(err)
-
-	fmt.Println("Emitted code:", code)
 }

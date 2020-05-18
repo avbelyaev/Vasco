@@ -3,25 +3,24 @@ package main
 import (
 	"encoding/binary"
 	"errors"
+	log "github.com/sirupsen/logrus"
 	"math"
 	. "wascho/go-generator/main/node"
 )
 
 var IDX int
 
-// ParseTokens takes tokens and returns an AST (Abstract Syntax Tree) representation
 func ParseTokens(tokens []*Token) *Program {
 	IDX = 0
 	program := NewProgram()
 	for len(tokens) > IDX {
 		node, err := parseExpression(tokens)
 		Check(err)
-		program.AddChildren(node)
+		program.AddChild(node)
 	}
 	return program
 }
 
-// accept checks to see if the current token matches a given token type, and advances if so
 func accept(tokens []*Token, expectedType TokenType) bool {
 	if tokens[IDX].Type == expectedType {
 		IDX++
@@ -30,12 +29,14 @@ func accept(tokens []*Token, expectedType TokenType) bool {
 	return false
 }
 
-// expect returns an error if the current token doesn't match the given type
 func expect(tokens []*Token, expectedType TokenType) error {
 	if len(tokens)-1 < IDX {
+		log.Errorf("Unexpected EOF at index %d", IDX)
 		return errors.New("Unexpected EOF")
+
 	} else if tokens[IDX].Type != expectedType {
-		return errors.New("Unexpected token " + tokens[IDX].Value.String())
+		log.Errorf("Unexpected token '%s' near index %d", tokens[IDX].ValueStr, IDX)
+		return errors.New("Unexpected token " + tokens[IDX].ValueStr)
 	}
 	return nil
 }
@@ -129,7 +130,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 			return ifNode, nil
 
 		case "define":
-			// are we attempting to define a function?
+			// defining function
 			if accept(tokens, TokenLParen) {
 				nameError := expect(tokens, TokenIdent)
 				if nil != nameError {
@@ -138,32 +139,36 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 				accept(tokens, TokenIdent)
 				funcName := tokens[IDX-1].Value.String()
 				funcArgs, _ := parseArgs(tokens)
-				lambdaExp, _ := parseExpression(tokens)
-				expError := closeExp(tokens)
-				if nil != expError {
-					return nil, expError
+				// lambda can have more than one expression inside body
+				expressions, err := parseExpressions(tokens)
+				if nil != err {
+					return nil, err
 				}
-				lambdaNode := NewLambdaExp(funcArgs, lambdaExp)
+				lambdaNode := NewLambdaExp(funcArgs, expressions)
 				defNode := NewDefExp(funcName, lambdaNode, Function)
 				return defNode, nil
 
 			} else {
-				// defining something besides a function
+				// defining variable
 				nameError := expect(tokens, TokenIdent)
 				if nil != nameError {
 					return nil, nameError
 				}
 				accept(tokens, TokenIdent)
 				name := tokens[IDX-1]
-				// this handles longhand lambda definitions too
+				// handle longhand lambda definitions
 				newExp, _ := parseExpression(tokens)
 				expError := closeExp(tokens)
 				if nil != expError {
 					return nil, expError
 				}
-				defNode := NewDefExp(name.Value.String(), newExp, Variable)
-				return defNode, nil
+				if newExp.Type() == LambdaNode {
+					return NewDefExp(name.Value.String(), newExp, Function), nil
+				} else {
+					return NewDefExp(name.Value.String(), newExp, Variable), nil
+				}
 			}
+
 		case "lambda":
 			lparenError := expect(tokens, TokenLParen)
 			if nil != lparenError {
@@ -171,12 +176,12 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 			}
 			IDX++
 			lambdaArgs, _ := parseArgs(tokens)
-			lambdaExp, _ := parseExpression(tokens)
-			expError := closeExp(tokens)
-			if nil != expError {
-				return nil, expError
+			// lambda can have more than one expression inside body
+			expressions, err := parseExpressions(tokens)
+			if nil != err {
+				return nil, err
 			}
-			lambdaNode := NewLambdaExp(lambdaArgs, lambdaExp)
+			lambdaNode := NewLambdaExp(lambdaArgs, expressions)
 			return lambdaNode, nil
 
 		default:
@@ -192,6 +197,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 			return callNode, nil
 		}
 	}
+	log.Errorf("Unexpected token near index %d", IDX)
 	return nil, errors.New("unexpected token")
 }
 
@@ -219,4 +225,21 @@ func parseArgs(tokens []*Token) ([]string, error) {
 		}
 	}
 	return funcArgs, nil
+}
+
+func parseExpressions(tokens []*Token) ([]AstNode, error) {
+	// lambda can have more than one expression inside body
+	var expressions []AstNode
+	for {
+		expression, err := parseExpression(tokens)
+		if nil != err {
+			break
+		}
+		expressions = append(expressions, expression)
+	}
+	expError := closeExp(tokens)
+	if nil != expError {
+		return nil, expError
+	}
+	return expressions, nil
 }

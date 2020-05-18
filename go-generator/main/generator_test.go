@@ -12,7 +12,7 @@ package main
 import "fmt"
 
 func main() {
-fmt.Println(314)
+fmt.Print(314)
 
 // avoiding unused import of "fmt"
 fmt.Println()
@@ -32,7 +32,7 @@ package main
 import "fmt"
 
 func main() {
-fmt.Println(111 + 222)
+fmt.Print(111 + 222)
 
 // avoiding unused import of "fmt"
 fmt.Println()
@@ -53,7 +53,7 @@ import "fmt"
 
 func main() {
 var printer = func(foo int) {
-fmt.Println(foo + 1)
+fmt.Print(foo + 1)
 }
 
 var pi = 314
@@ -87,7 +87,7 @@ import "fmt"
 func main() {
 var myAbs = func(x int) {
 if x < 0 {
-	fmt.Println(111)
+	fmt.Print(111)
 } else {
 	fmt.Println(222)
 }
@@ -101,7 +101,7 @@ fmt.Println()
 `
 	tokens := LexExp(`
 		(define (myAbs x)
-  			(if (< x 0) (display 111) (display 222)))
+  			(if (< x 0) (display 111) (displayln 222)))
 
 		(myAbs 1)
 	`)
