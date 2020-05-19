@@ -42,6 +42,16 @@ func TestLexIdentifierWithNumbers(t *testing.T) {
 	checkTokens(tokens, expectedTokens, t)
 }
 
+func TestLexCallIdentifierWithNumber(t *testing.T) {
+	tokens := LexExp("(display fucker1488)")
+	expectedTokens := []*Token{
+		NewTokenString(TokenLParen, "("),
+		NewTokenString(TokenIdent, "display"),
+		NewTokenString(TokenIdent, "fucker1488"),
+		NewTokenString(TokenRParen, ")")}
+	checkTokens(tokens, expectedTokens, t)
+}
+
 func TestLexNestedExp(t *testing.T) {
 	tokens := LexExp("(abc (def ghi (jkl)))")
 	expectedTokens := []*Token{
