@@ -12,7 +12,7 @@
 (define sq
   (lambda (x) (* x x)))
 
-(define (leSummator x)
+(define (summator x)
   (let ((y 123)
         (z 456))
     (+ x y z)))
