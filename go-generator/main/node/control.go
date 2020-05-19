@@ -21,6 +21,9 @@ func NewIfExp(cond AstNode, onTrue AstNode, onFalse AstNode) *IfExp {
 func (a IfExp) Type() AstNodeType {
 	return IfNode
 }
+func (a IfExp) String() string {
+	return "(if ... then ... else ... )"
+}
 
 type CallExp struct {
 	SExp
@@ -36,4 +39,7 @@ func NewCallExpr(whatToCall string, callArg AstNode) *CallExp {
 }
 func (a CallExp) Type() AstNodeType {
 	return CallNode
+}
+func (a CallExp) String() string {
+	return "call " + a.WhatToCall
 }

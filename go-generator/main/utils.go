@@ -39,6 +39,19 @@ func IsArithmetic(nNode *node.AstNode) bool {
 	return false
 }
 
+func IsLiteral(nNode *node.AstNode) bool {
+	nodeType := (*nNode).Type()
+	switch nodeType {
+	case
+		node.IntNode,
+		node.FloatNode,
+		node.BoolNode,
+		node.StringNode:
+		return true
+	}
+	return false
+}
+
 func GetOperator(nNode *node.AstNode) string {
 	nodeType := (*nNode).Type()
 	switch nodeType {

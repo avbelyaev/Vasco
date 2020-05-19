@@ -6,24 +6,31 @@ type AstNodeType int
 
 const (
 	ProgramNode AstNodeType = iota
+	// arithmetic
 	AddNode
 	SubNode
 	MulNode
 	DivNode
+	// comparison
 	GtNode
-	LtNode
 	GteNode
+	LtNode
 	LteNode
 	EqNode
-	IfNode
-	DefNode
-	CallNode
-	LambdaNode
-	IdentNode
+	// literals
 	IntNode
 	FloatNode
 	StringNode
 	BoolNode
+	// control flow
+	IfNode
+	CallNode
+	// definitions
+	DefNode
+	LambdaNode
+	VoidNode
+	IdentNode
+	SetNode
 )
 
 var NodeCounter int
@@ -37,6 +44,7 @@ type AstNode interface {
 	Children() []AstNode
 	AddChild(AstNode)
 	Type() AstNodeType
+	String() string
 }
 
 type SExp struct {
@@ -68,4 +76,7 @@ func NewProgram(nodes ...AstNode) *Program {
 }
 func (p Program) Type() AstNodeType {
 	return ProgramNode
+}
+func (p Program) String() string {
+	return "Program"
 }

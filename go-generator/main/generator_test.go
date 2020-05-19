@@ -19,7 +19,7 @@ fmt.Println()
 }
 `
 	tokens := LexExp("(display 314)")
-	program := ParseTokens(tokens)
+	program, _ := ParseTokens(tokens)
 	generated, _ := GenerateForEachRoot(program)
 
 	assert.Equal(t, expected, generated)
@@ -39,7 +39,7 @@ fmt.Println()
 }
 `
 	tokens := LexExp("(display (+ 111 222))")
-	program := ParseTokens(tokens)
+	program, _ := ParseTokens(tokens)
 	generated, _ := GenerateForEachRoot(program)
 
 	assert.Equal(t, expected, generated)
@@ -72,7 +72,7 @@ fmt.Println()
 
 		(printer pi)
 	`)
-	program := ParseTokens(tokens)
+	program, _ := ParseTokens(tokens)
 	generated, _ := GenerateForEachRoot(program)
 
 	assert.Equal(t, expected, generated)
@@ -105,7 +105,7 @@ fmt.Println()
 
 		(myAbs 1)
 	`)
-	program := ParseTokens(tokens)
+	program, _ := ParseTokens(tokens)
 	generated, _ := GenerateForEachRoot(program)
 
 	assert.Equal(t, expected, generated)

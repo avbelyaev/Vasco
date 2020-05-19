@@ -16,6 +16,9 @@ func NewAddExp(lhs AstNode, rhs AstNode) *AddExp {
 func (a AddExp) Type() AstNodeType {
 	return AddNode
 }
+func (a AddExp) String() string {
+	return a.Op
+}
 
 type SubExp struct {
 	SExp
@@ -32,6 +35,9 @@ func NewSubExp(lhs AstNode, rhs AstNode) *SubExp {
 }
 func (a SubExp) Type() AstNodeType {
 	return SubNode
+}
+func (a SubExp) String() string {
+	return a.Op
 }
 
 type MulExp struct {
@@ -50,6 +56,9 @@ func NewMulExp(lhs AstNode, rhs AstNode) *MulExp {
 func (a MulExp) Type() AstNodeType {
 	return MulNode
 }
+func (a MulExp) String() string {
+	return a.Op
+}
 
 type DivExp struct {
 	SExp
@@ -64,6 +73,9 @@ func NewDivExp(lhs AstNode, rhs AstNode) *DivExp {
 	node.Op = "/"
 	return node
 }
-func (d DivExp) Type() AstNodeType {
+func (a DivExp) Type() AstNodeType {
 	return DivNode
+}
+func (a DivExp) String() string {
+	return a.Op
 }

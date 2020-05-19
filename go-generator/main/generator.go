@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/palantir/stacktrace"
 	log "github.com/sirupsen/logrus"
 	"io/ioutil"
 	"os"
@@ -50,6 +51,8 @@ func GetIdentifier(name string) string {
 }
 
 func GenerateForEachRoot(program *Program) (string, error) {
+	log.Infof("Generating code")
+
 	identifierNames = make(map[string]string, 10)
 	LambdaCounter = 0
 	NodeCounter = 0
@@ -57,11 +60,15 @@ func GenerateForEachRoot(program *Program) (string, error) {
 	for _, root := range program.Children() {
 		generatedRoot, err := GenerateCode(root)
 		if nil != err {
-			return "", err
+			return "", stacktrace.Propagate(err,
+				"error while generating code of root node of type %v: %s", root.Type(), root.String())
 		}
 		c += generatedRoot + "\n"
+		log.Infof("Generated code for root node of type %v: %s", root.Type(), root.String())
 	}
 	c += programFooter
+
+	log.Infof("Generated successfully")
 	return c, nil
 }
 
@@ -105,19 +112,17 @@ func GenerateCode(node AstNode) (string, error) {
 
 	} else if nodeType == LambdaNode {
 		lambda := node.(*LambdaExp)
-		args := ""
-		for _, arg := range lambda.Args {
-			args += ", " + arg
-		}
+		argString := generateArgs(lambda.Args)
 		lambdaName := generateLambdaName()
-		c := fmt.Sprintf("var %s func(interface{}) interface{}\n", lambdaName)
-		c += fmt.Sprintf("%s = func(x interface{}) interface{} {\n", lambdaName)
+		//c := fmt.Sprintf("var %s func(interface{}) interface{}\n", lambdaName)
+		c := fmt.Sprintf("%s = func(%s) int {\n", lambdaName, argString)
 		body, err := GenerateCode(lambda.Children()[0])
 		if nil != err {
 			return "", err
 		}
 		c += body
 		c += "}"
+		return c, nil
 
 	} else if nodeType == DefNode {
 		defNode := node.(*DefExp)
@@ -125,13 +130,7 @@ func GenerateCode(node AstNode) (string, error) {
 		if defNode.DefType == Function {
 			lambda := defNode.Children()[0].(*LambdaExp)
 			funcName := GetIdentifier(defNode.Name)
-
-			// extract args
-			argString := ""
-			for _, arg := range lambda.Args {
-				argString += fmt.Sprintf("%s int, ", arg)
-			}
-			argString = argString[:len(argString)-2]
+			argString := generateArgs(lambda.Args)
 			// to be able to make recursive call
 			c := fmt.Sprintf("var %s func(%s) int\n", funcName, argString)
 			c += fmt.Sprintf("%s = func(%s) int {\n", funcName, argString)
@@ -160,17 +159,43 @@ func GenerateCode(node AstNode) (string, error) {
 
 		} else if defNode.DefType == Variable {
 			varName := defNode.Name
-			varValue, err := GenerateCode(defNode.Children()[0])
-			if nil != err {
-				return "", err
+
+			isTheOnlyChild := 1 == len(defNode.Children())
+			if isTheOnlyChild {
+				if defNode.Children()[0].Type() == VoidNode {
+					// void node is a function declaration
+					c := fmt.Sprintf("var %s func(int)int\n", varName)
+					return c, nil
+
+				} else {
+					// any other node is a variable creations
+					varValue, err := GenerateCode(defNode.Children()[0])
+					if nil != err {
+						return "", err
+					}
+					c := fmt.Sprintf("var %s = %s\n", varName, varValue)
+					return c, nil
+				}
 			}
-			c := fmt.Sprintf("var %s = %s\n", varName, varValue)
-			return c, nil
+			// TODO can (define foo ...) have more than 1 children?
+			return "", stacktrace.NewError(
+				"More than one child for node with ID %s: %s", defNode.NodeID, defNode.String())
 		}
+
+	} else if nodeType == SetNode {
+		setNode := node.(*SetExp)
+		setCode, err := GenerateCode(setNode.Children()[0])
+		if nil != err {
+			return "", stacktrace.Propagate(err,
+				"error while generating code for child[0] of nodeID %s: %s", setNode.NodeID, setNode.String())
+		}
+		return setCode, nil
 
 	} else if nodeType == CallNode {
 		call := node.(*CallExp)
 		callName := GetIdentifier(call.WhatToCall)
+
+		// TODO generate print separately since it doesn allow creating vars inside call
 		if callName == "display" {
 			callName = "fmt.Print"
 		} else if callName == "displayln" {
@@ -214,9 +239,24 @@ func GenerateCode(node AstNode) (string, error) {
 		}
 		c += fmt.Sprintf("}")
 		return c, err
+
+	} else if nodeType == VoidNode {
+		// void is only a declaration of function
+		// TODO set up args, retValue properly
+		c := "func(int)int"
+		return c, nil
 	}
 
 	return "", errors.New(fmt.Sprintf("unexpected node %v", node))
+}
+
+func generateArgs(args []string) string {
+	argString := ""
+	for _, arg := range args {
+		argString += fmt.Sprintf("%s int, ", arg)
+	}
+	argString = argString[:len(argString)-2]
+	return argString
 }
 
 type Value struct {
@@ -232,14 +272,21 @@ func NewValue(v interface{}) *Value {
 
 func main() {
 	tokens := LexExp(`
-		(define (fact n)
-  			(if (= n 0)
-      				1
-      				(* n (fact (- n 1)))))
+		  (define foo 5)
+		  (define fact (void))
+		  (define G158 (void))
 
-		(display (fact 5))
+		  (set! fact
+			(lambda (n)
+			  (if (= n 0)
+				1
+				(* n (fact (- n 1))))))
+
+		  (set! G158 (display (fact foo)))
 	`)
-	root := ParseTokens(tokens)
+	root, err := ParseTokens(tokens)
+	Check(err)
+
 	ProgramRoot = root
 	code, err := GenerateForEachRoot(root)
 	if nil != err {
