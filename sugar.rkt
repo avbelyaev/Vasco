@@ -1,20 +1,10 @@
 #lang racket
 
+(require racket/include)
+(include "utils.rkt")
 
 
-
-; define? : term -> boolean
-(define (define? sx)
-  (match sx
-    [`(define . ,_) #t]
-    [else           #f]))
-
-; not-define? : term -> boolean
-(define (not-define? sx)
-  (not (define? sx)))
-
-; atomic? : term -> boolean
-(define (atomic? exp)
+(define (simple? exp)
   (match exp
     [`(λ . ,_)     #f]
     [(? number?)   #t]
@@ -24,202 +14,167 @@
     ['(void)       #t]
     [else          #f]))
 
-; atomic-define? : term -> boolean
-(define (atomic-define? def)
+(define (simpleDefine? def)
   (match def
-    [`(define ,v ,exp)  (atomic? exp)]
+    [`(define ,v ,exp)  (simple? exp)]
     [else               #f]))
 
 
 
-; tops-to-defs : top list -> def list
-(define (tops-to-defs tops)
-  (define (top-to-def top)
-    (match top
-      [`(define (,f ,params ...) . ,body)   `(define ,f (λ ,params . ,body))]
-      [`(define ,v ,exp)                    `(define ,v ,exp)]
-      [exp                                  `(define ,(gensym '_) ,exp)]))
-  (map top-to-def tops))
+;
+; ---------------- Program -----------------
+;
+(define (deusgarTopLevel exprs)
+  (define (desugarer exp)
+    (match exp
+      ; ... -> matches any number of values of preceding pattern;
+      ; .   -> shorthand for cons (aka "make a list")
+      [`(define (,f ,params ...) . ,body)           `(define ,f (λ ,params . ,body))]
+      ; regular defines do not bother us - leave them as is
+      [`(define ,v ,any)                            `(define ,v ,any)]
+      ; for any other expr create a define
+      [any                                          `(define ,(gensym '_) ,any)]))
+
+  (map desugarer exprs))
 
 
 
-
-(define (desugar-body body)
+(define (desugarBody body)
   (match body
-    [`(,exp)
-     (desugar-exp exp)]
-
-    [`(,(and (? not-define?) exps) ...)
-     `(begin ,@(map desugar-exp exps))]
-
+    [`(,exp)                                        (desugarExp exp)]
     [`(,tops ... ,exp)
-     (define defs (tops-to-defs tops))
-     (desugar-exp (match defs
-                    [`((define ,vs ,es) ...)
-                     `(letrec ,(map list vs es) ,exp)]))]))
+      (define defs (deusgarTopLevel tops))
+      (desugarExp (match defs
+                    [`((define ,vs ,es) ...)        `(letrec ,(map list vs es) ,exp)]))]))
 
 
 
-
-; desugar-exp : exp -> exp
-(define (desugar-exp exp)
+(define (desugarExp exp)
   (match exp
-    [(? symbol?)      exp]
+    ; primitive cases stay same
+    [(? symbol?)                                    exp]
+    [(? number?)                                    exp]
+    [(? string?)                                    exp]
+    [(? boolean?)                                   exp]
+    [(? void?)                                      exp]
 
+    ; ,@ == unquote-splicing
+    ; let -> lambda
     [`(let ((,vs ,es) ...) . ,body)
-     `((λ ,vs ,(desugar-body body))
-       ,@(map desugar-exp es))]
+     `((lambda ,vs ,(desugarBody body))
+       ,@(map desugarExp es))]
 
-    [`(letrec ((,vs ,es) ...) . ,body)
-     (desugar-exp
-      `(let ,(for/list ([v vs])
-               (list v '(void)))
-         ,@(map (λ (v e)
-                  `(set! ,v ,e))
-                vs es)
-         ,@body))]
+    [`(lambda ,params . ,body)                      `(lambda ,params ,(desugarBody body))]
 
-    [`(λ ,params . ,body)
-     `(λ ,params ,(desugar-body body))]
+    ; cond -> nested IFs
+    [`(cond)                                        '(void)]
+    [`(cond (else ,exp))                            (desugarExp exp)]
+    [`(cond (,condition ,then))                     `(if ,(desugarExp condition)
+                                                         ,(desugarExp then)
+                                                          (void))]
+    [`(cond (,condition ,then) ,rest ...)           `(if ,(desugarExp condition)
+                                                         ,(desugarExp then)
+                                                         ,(desugarExp `(cond . ,rest)))]
 
-    [`(cond)
-     '(void)]
+    ; unwrap IFs
+    [`(if ,condition ,then)                         `(if ,(desugarExp condition) 
+                                                         ,(desugarExp then) 
+                                                          (void))]
 
-    [`(cond (else ,exp))
-     (desugar-exp exp)]
+    [`(if ,condition ,then ,else)                   `(if ,(desugarExp condition)
+                                                         ,(desugarExp then)
+                                                         ,(desugarExp else))]
 
-    [`(cond (,test ,exp))
-     `(if ,(desugar-exp test)
-          ,(desugar-exp exp)
-          (void))]
+    [`(set! ,v ,exp)                                `(set! ,v ,(desugarExp exp))]
 
-    [`(cond (,test ,exp) ,rest ...)
-     `(if ,(desugar-exp test)
-          ,(desugar-exp exp)
-          ,(desugar-exp `(cond . ,rest)))]
+    ; func
+    [`(,f . ,args)                                  `(,(desugarExp f) ,@(map desugarExp args))]
 
-    [`(and)   #t]
-    [`(or)    #f]
-
-    [`(or ,exp)
-     (desugar-exp exp)]
-
-    [`(and ,exp)
-     (desugar-exp exp)]
-
-    [`(or ,exp . ,rest)
-     (define $t (gensym 't))
-     (desugar-exp
-      `(let ((,$t ,exp))
-         (if ,$t ,$t (or . ,rest))))]
-
-    [`(and ,exp . ,rest)
-     `(if ,(desugar-exp exp)
-          ,(desugar-exp `(and . ,rest))
-          #f)]
-
-    [`(if ,test ,exp)
-     `(if ,(desugar-exp test) ,(desugar-exp exp) (void))]
-
-    [`(if ,test ,exp1 ,exp2)
-     `(if ,(desugar-exp test)
-          ,(desugar-exp exp1)
-          ,(desugar-exp exp2))]
-
-    [`(set! ,v ,exp)
-     `(set! ,v ,(desugar-exp exp))]
-
-
-    ;[`(begin . ,body)
-    ; (desugar-body body)]
-
-    [(? atomic?)      exp]
-
-    [`(,f . ,args)
-     `(,(desugar-exp f) ,@(map desugar-exp args))]
-
-    [else
-     (printf "desugar fail: ~s~n" exp)
-     exp]))
+    ; ---
+    [else                                           (error (format "error on desugarExp: ~s\n" exp))]))
 
 
 
 ; desugar-define : define-term -> exp
-(define (desugar-define def)
-  (match def
-    [`(define ,v ,exp)   `(define ,v ,(desugar-exp exp))]
-    [else                 (error (format "cannot desugar: ~s~n" def))]))
+(define (desugarDefine exp)
+  (match exp
+    [`(define ,v ,any)                              `(define ,v ,(desugarExp any))]
+    [else                                           (error "error on desugarDefine")]))
 
 
 
-(define (desugar-program prog)
-  (set! prog (tops-to-defs prog))
-  (set! prog (map desugar-define prog))
+(define (desugarProgram prog)
+  (set! prog (deusgarTopLevel prog))
+  (set! prog (map desugarDefine prog))
   (set! prog
     (partition
-     atomic-define?
+     simpleDefine?
      prog
      (λ (variables complex)
-       (define func-declarations
+       (define funcDeclarations
          (for/list ([c complex])
            (match c
-             [`(define ,v ,complex)         `(,v (void))])))
+             [`(define ,v ,complex)                 `(,v (void))]
+             [else                                  (error "error on funcDeclarations")])))
 
-       (define function-definitions
+       (define (functionDeclarationMapper exp)
+          (match exp
+            [`(,name ,voidBody)                     `(define ,name ,voidBody)]
+            [else                                   (error (format "mapper error: ~s\n" exp))]))
+
+       (define functionDefinitions
          (for/list ([c complex])
            (match c
-             [`(define ,v ,complex)         `(set! ,v ,complex)])))
+             [`(define ,v ,complex)                 `(set! ,v ,complex)]
+             [else                                  (error "error on functionDefinitions")])))
 
        (displayln "\n--------------- Simple variables ---------------")
-       (displayln (pretty-format variables 40))
+       (displayln (pretty-format variables 30))
 
        (displayln "\n------------- Function declaration -------------")
-       (set! func-declarations (map function-declaration-mapper func-declarations))
-       (displayln (pretty-format func-declarations 40))
+       (displayln (pretty-format funcDeclarations 30))
 
        (displayln "\n------------- Function definitions -------------")
-       (displayln (pretty-format function-definitions 40))
+       (displayln (pretty-format functionDefinitions 40))
 
        (displayln "\n------------------- Result ---------------------")
        (append
             variables
-            func-declarations
-            function-definitions)
+            (map functionDeclarationMapper funcDeclarations)
+            functionDefinitions)
        )))
   prog)
 
 
 
-(define (function-declaration-mapper exp)
-    (match exp
-        [`(,name ,voidBody)     `(define ,name ,voidBody)]
-        [else                   (error (format "mapper error: ~s\n" exp))]))
 
-
-(define (partition pred lst k)
-  (if (not (pair? lst))
-      (k '() '())
-      (partition pred (cdr lst) (λ (in out)
-        (if (pred (car lst))
-            (k (cons (car lst) in) out)
-            (k in (cons (car lst) out)))))))
-
-
-
-(define test
+; program being desugared
+; NOTE: remove first and last parentheses from expression when pasting here
+(define stdInStub
   '(
-    (define (area x) (* pi 2 x x))
-    (define pi 3.14)
-    (display (area 10))
-    (define (foo x)
-        (cond
-            [(= x 0)  1]
-            [(> x 0)  (+ x (foo (- x 1)))]
-            [else     'universe-broke]))
+    (define (fact n)
+      			(if (= n 0)
+          				1
+          				(* n (fact (- n 1)))))
 
-    (define bar 20)
-
-    (display (foo bar))
+    (display (fact 5))
     ))
 
-(display (pretty-format (desugar-program test) 40))
+
+
+(define (main prog)
+	(displayln (pretty-format prog 40))
+	(newline)
+
+ 	(displayln "         |")
+ 	(displayln "      desugar")
+ 	(displayln "         |")
+ 	(displayln "         V")
+
+ 	(set! prog (desugarProgram prog))
+	(displayln (pretty-format prog 40)))
+
+
+; TODO read from stdin
+;(main (read))
+(main stdInStub)

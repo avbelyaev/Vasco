@@ -165,20 +165,34 @@ node lambdajam/sum.c.js
 ```
 
 
-## Quick start Go
+## Quick start 
 
 - install GO go1.13.4 (darwin or linux)
-- set up $GOPATH
-- install package manager "dep"
-- install dep dependencies 
-- generate code `go run go-generator/main/generator.go go-generator/main/lexer.go go-generator/main/parser.go`
-- get bindings from your GO distribution (`$GO/misc/wasm`)
+  - set up $GOPATH
+  - install package manager "dep"
+  - install dep dependencies 
+- *(skip this) desugar source code
+  - remove `#lang racket` header if exists
+  - insert source code into stub inside `sugar.rkt`
+  - run `racket sugar.rkt` to get desugared code
+- generate code 
+  - insert code into stub inside `generator.go`
+  - run `go run go-generator/main/generator.go go-generator/main/lexer.go go-generator/main/parser.go` to get output
+- get Web Assembly bindings from your GO distribution (`$GO/misc/wasm`)
   - `wasm_exec.html`
   - `wasm_exe.js` 
-- go to server/static and generate module
-  - `GOARCH=wasm GOOS=js go build -o server/static/out.wasm server/static/out.go`
+  - place bindings into `server/static`
+- generate WASM module
+  - go to `server/static` 
+  - run `GOARCH=wasm GOOS=js go build -o server/static/out.wasm server/static/out.go`
 - run server
   - `go run server.go`
-- navigate to `http://localhost:9999/`
-- open `wasm_exec.html` and open Dev console
-- hit "Run" and see console
+- open browser
+  - navigate to http://localhost:9999/
+  - open `wasm_exec.html` and open Dev console
+  - hit "Run" and see console output
+
+
+## TODO
+
+- automate (merge generator & server, add sciprts)
