@@ -19,7 +19,7 @@ func accept(tokens []*Token, expectedType TokenType) bool {
 }
 
 func expect(tokens []*Token, expectedType TokenType) error {
-	if len(tokens)-1 < IDX {
+	if IDX > len(tokens)-1 {
 		log.Errorf("Unexpected EOF at index %d", IDX)
 		return stacktrace.NewError("Unexpected EOF at index %d", IDX)
 
@@ -146,14 +146,14 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 				accept(tokens, TokenIdent)
 				funcName := tokens[IDX-1].ValueStr
 				funcArgs, _ := parseArgs(tokens)
-				// as there can be more than one expression, parse ALL (list)
-				expressions, err := parseExpressions(tokens)
+				// TODO as there can be more than one expression, parse ALL (list)
+				expression, err := parseExpression(tokens)
 				if nil != err {
 					return nil, err
 				}
 				_ = closeExp(tokens)
 				// create node
-				lambdaNode := NewLambdaExp(funcArgs, expressions)
+				lambdaNode := NewLambdaExp(funcArgs, []AstNode{expression})
 				defNode := NewDefExp(funcName, lambdaNode, Function)
 				return defNode, nil
 
@@ -189,13 +189,13 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 			}
 			IDX++
 			lambdaArgs, _ := parseArgs(tokens)
-			// as there can be more than one expression, parse ALL (list)
-			expressions, err := parseExpressions(tokens)
+			// TODO as there can be more than one expression, parse ALL (list)
+			expression, err := parseExpression(tokens)
 			if nil != err {
 				return nil, err
 			}
 			_ = closeExp(tokens)
-			lambdaNode := NewLambdaExp(lambdaArgs, expressions)
+			lambdaNode := NewLambdaExp(lambdaArgs, []AstNode{expression})
 			return lambdaNode, nil
 
 		case "set!":
@@ -234,7 +234,7 @@ func parseExpression(tokens []*Token) (AstNode, error) {
 func closeExp(tokens []*Token) error {
 	rparenError := expect(tokens, TokenRParen)
 	if nil != rparenError {
-		return rparenError
+		return stacktrace.Propagate(rparenError, "error while trying to close at index %d", IDX)
 	}
 	IDX += 1
 	return nil
@@ -263,14 +263,30 @@ func parseExpressions(tokens []*Token) ([]AstNode, error) {
 	// lambda can have more than one expression inside body
 	var expressions []AstNode
 	for {
+		idxBeforeAttempt := IDX
 		expression, err := parseExpression(tokens)
 		// roll the pointer back since he hopped over the symbol in `parseExpression`
 		if nil != err {
-			IDX--
+			IDX = idxBeforeAttempt
 			log.Warnf("Rolling back to index %d. There might be an error line above", IDX)
 			break
 		}
-		_ = closeExp(tokens)
+		err = closeExp(tokens)
+		if nil != err {
+			// TODO вопсроизводится на TestLambdaExp и
+			/*
+						  (define foo 5)
+				    (define (fact n)
+				        (if (= n 0)
+				            1
+				            (* n (fact (- n 1)))))
+
+				    (display (fact foo))
+			*/
+			IDX = 40
+			break
+			//return nil, stacktrace.Propagate(err, "Could not close at index %d", IDX)
+		}
 		expressions = append(expressions, expression)
 	}
 	return expressions, nil

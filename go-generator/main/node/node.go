@@ -49,17 +49,17 @@ type AstNode interface {
 
 type SExp struct {
 	NodeID       string
-	ChildrenList []AstNode
+	childrenList []AstNode
 }
 
 func (s *SExp) ID() string {
 	return s.NodeID
 }
 func (s *SExp) Children() []AstNode {
-	return s.ChildrenList
+	return s.childrenList
 }
 func (s *SExp) AddChild(node AstNode) {
-	s.ChildrenList = append(s.ChildrenList, node)
+	s.childrenList = append(s.childrenList, node)
 }
 
 type Program struct {

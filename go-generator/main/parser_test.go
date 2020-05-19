@@ -8,7 +8,7 @@ import (
 
 func checkProgram(program *Program, expectedProgram *Program, t *testing.T) {
 	for i, subNode := range program.Children() {
-		expectedSubNode := expectedProgram.ChildrenList[i]
+		expectedSubNode := expectedProgram.Children()[i]
 		assert.Equal(t, expectedSubNode.Type(), subNode.Type())
 	}
 }

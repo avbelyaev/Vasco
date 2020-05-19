@@ -112,7 +112,7 @@ func GenerateCode(node AstNode) (string, error) {
 
 	} else if nodeType == LambdaNode {
 		lambda := node.(*LambdaExp)
-		argString := generateArgs(lambda.Args)
+		argString := generateArgString(lambda.Args)
 		lambdaName := generateLambdaName()
 		//c := fmt.Sprintf("var %s func(interface{}) interface{}\n", lambdaName)
 		c := fmt.Sprintf("%s = func(%s) int {\n", lambdaName, argString)
@@ -130,7 +130,7 @@ func GenerateCode(node AstNode) (string, error) {
 		if defNode.DefType == Function {
 			lambda := defNode.Children()[0].(*LambdaExp)
 			funcName := GetIdentifier(defNode.Name)
-			argString := generateArgs(lambda.Args)
+			argString := generateArgString(lambda.Args)
 			// to be able to make recursive call
 			c := fmt.Sprintf("var %s func(%s) int\n", funcName, argString)
 			c += fmt.Sprintf("%s = func(%s) int {\n", funcName, argString)
@@ -184,6 +184,15 @@ func GenerateCode(node AstNode) (string, error) {
 
 	} else if nodeType == SetNode {
 		setNode := node.(*SetExp)
+
+		//isCallNode := setNode.Children()[0].Type() == CallNode
+		//if isCallNode {
+		//	// TODO should be a better way
+		//	callNode := node.(*CallExp)
+		//	if callNode.WhatToCall == "display" || callNode.WhatToCall == "displayln" {
+		//
+		//	}
+		//}
 		setCode, err := GenerateCode(setNode.Children()[0])
 		if nil != err {
 			return "", stacktrace.Propagate(err,
@@ -250,7 +259,7 @@ func GenerateCode(node AstNode) (string, error) {
 	return "", errors.New(fmt.Sprintf("unexpected node %v", node))
 }
 
-func generateArgs(args []string) string {
+func generateArgString(args []string) string {
 	argString := ""
 	for _, arg := range args {
 		argString += fmt.Sprintf("%s int, ", arg)
@@ -273,16 +282,12 @@ func NewValue(v interface{}) *Value {
 func main() {
 	tokens := LexExp(`
 		  (define foo 5)
-		  (define fact (void))
-		  (define G158 (void))
+    (define (fact n)
+        (if (= n 0)
+            1
+            (* n (fact (- n 1)))))
 
-		  (set! fact
-			(lambda (n)
-			  (if (= n 0)
-				1
-				(* n (fact (- n 1))))))
-
-		  (set! G158 (display (fact foo)))
+    (display (fact foo))
 	`)
 	root, err := ParseTokens(tokens)
 	Check(err)
