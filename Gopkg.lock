@@ -18,6 +18,17 @@
   version = "v1.0.3"
 
 [[projects]]
+  branch = "master"
+  digest = "1:c497b54ed4be2a7753ae4bfc7629f7168530f22e70ede8badd2aae657ba472b4"
+  name = "github.com/palantir/stacktrace"
+  packages = [
+    ".",
+    "cleanpath",
+  ]
+  pruneopts = "UT"
+  revision = "78658fd2d1772b755720ed8c44367d11ee5380d6"
+
+[[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
   name = "github.com/pmezard/go-difflib"
   packages = ["difflib"]
@@ -64,6 +75,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/palantir/stacktrace",
     "github.com/sirupsen/logrus",
     "github.com/stretchr/testify/assert",
   ]

@@ -39,8 +39,6 @@ type Token struct {
 	ValueStr string
 }
 
-// NewTokenString is a convenience function that returns a token with
-// a given string value.
 func NewTokenString(tokenType TokenType, tokenString string) *Token {
 	tokenValue := bytes.NewBufferString(tokenString)
 	token := &Token{
@@ -51,19 +49,14 @@ func NewTokenString(tokenType TokenType, tokenString string) *Token {
 	return token
 }
 
-// NewTokenRaw creates a new token from a raw Buffer.
 func NewTokenRaw(tokenType TokenType, tokenBuffer bytes.Buffer, repr string) *Token {
 	tokenSlice := make([]byte, tokenBuffer.Len(), tokenBuffer.Len())
-	// copy to avoid the slice (and thus buffer data) getting overriden by
-	// future code
 	copy(tokenSlice, tokenBuffer.Bytes())
 	tokenValue := bytes.NewBuffer(tokenSlice)
 	token := Token{tokenType, *tokenValue, repr}
 	return &token
 }
 
-// bufferStringToNum takes an input buffer and converts it from a string of
-// character bytes to a float/int
 func bufferStringToNum(tokenType TokenType, inputBuffer bytes.Buffer) *bytes.Buffer {
 	bufferString := inputBuffer.String()
 	var byteBuffer [binary.MaxVarintLen64]byte
@@ -78,199 +71,189 @@ func bufferStringToNum(tokenType TokenType, inputBuffer bytes.Buffer) *bytes.Buf
 	return returnBuffer
 }
 
-// flushAccumulator empties the contents of the given Buffer into a new Token
-// and resets it and the accumulator token type. A convenience function for LexExp.
-func flushAccumulator(
-	accumulatorType *TokenType,
-	accumulatorBuffer *bytes.Buffer,
-	tokenBuffer *[]*Token) {
-	if *accumulatorType == TokenFloatLiteral || *accumulatorType == TokenIntLiteral {
-		convertedBuffer := bufferStringToNum(*accumulatorType, *accumulatorBuffer)
-		*tokenBuffer = append(*tokenBuffer, NewTokenRaw(*accumulatorType, *convertedBuffer, string(accumulatorBuffer.Bytes())))
+var identContainsNumber = false
+
+func flush(accType *TokenType, byteBuffer *bytes.Buffer, tokBuffer *[]*Token) {
+	if *accType == TokenFloatLiteral || *accType == TokenIntLiteral {
+		convertedBuffer := bufferStringToNum(*accType, *byteBuffer)
+		*tokBuffer = append(*tokBuffer, NewTokenRaw(*accType, *convertedBuffer, string(byteBuffer.Bytes())))
 	} else {
-		*tokenBuffer = append(*tokenBuffer, NewTokenRaw(*accumulatorType, *accumulatorBuffer, string(accumulatorBuffer.Bytes())))
+		if byteBuffer.Bytes()[0] == 1 {
+			*tokBuffer = append(*tokBuffer, NewTokenRaw(*accType, *byteBuffer, "#t"))
+		} else if byteBuffer.Bytes()[0] == 0 {
+			*tokBuffer = append(*tokBuffer, NewTokenRaw(*accType, *byteBuffer, "#f"))
+		} else {
+			*tokBuffer = append(*tokBuffer, NewTokenRaw(*accType, *byteBuffer, string(byteBuffer.Bytes())))
+		}
 	}
-	accumulatorBuffer.Reset()
-	*accumulatorType = TokenNone
+	byteBuffer.Reset()
+	*accType = TokenNone
+	identContainsNumber = false
 }
 
-// peek peeks at the next rune in the given input string.
 func peek(input string, currentIndex int) rune {
-	// at the end of the string?
 	if len(input)-1 == currentIndex {
 		return '\000'
 	}
 	return rune(input[currentIndex+1])
 }
 
-// LexExp lexes an input string into Token objects. There are no possible user-facing
-// errors from this process.
 func LexExp(input string) []*Token {
 	var tokens []*Token
-	// accumulation variables for multi-character tokens such as idents and literals
-	accumulating := false
-	var accumulatingType TokenType
-	var accumulatorBuffer bytes.Buffer
-	// characters that can be used in an ident asides from ., which has meaning outside
-	// idents
+	isAcc := false
+	var accType TokenType
+	var accBuffer bytes.Buffer
+
 	specialInitials := "!$%&*/:<=>?^_~"
-	// flag as to whether or not the | character has taken effect
-	// anything enclosed within | | is a valid ident in R7RS
-	overrideState := overrideNone
-	// operator characters
+	override := overrideNone
 	operatorChars := "+-/*<=>"
-	for index, glyphRune := range input {
+
+	for i, glyphRune := range input {
 		glyph := string(glyphRune)
-		if overrideState == overrideIdent {
-			accumulatorBuffer.WriteString(glyph)
+
+		if override == overrideIdent {
+			accBuffer.WriteString(glyph)
 			if glyph == "|" {
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-				accumulating = false
-				overrideState = overrideNone
+				flush(&accType, &accBuffer, &tokens)
+				isAcc = false
+				override = overrideNone
 			}
-		} else if overrideState == overrideString {
+
+		} else if override == overrideString {
 			if glyph == "\"" {
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-				accumulating = false
-				overrideState = overrideNone
+				flush(&accType, &accBuffer, &tokens)
+				isAcc = false
+				override = overrideNone
 			} else {
-				accumulatorBuffer.WriteString(glyph)
+				accBuffer.WriteString(glyph)
 			}
+
 		} else if unicode.IsSpace(glyphRune) {
-			// flush the accumulator if we were trying to accumulate beforehand
-			// no multi-char token accepts a space
-			if accumulating == true {
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-				accumulating = false
+			if isAcc == true {
+				flush(&accType, &accBuffer, &tokens)
+				isAcc = false
 			}
-			// flush the accumulator for newlines, as well
+
 		} else if glyph == "\n" {
-			flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-			accumulating = false
-			// lparen
+			flush(&accType, &accBuffer, &tokens)
+			isAcc = false
+
 		} else if glyph == "(" {
-			if accumulating == true {
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-				accumulating = false
+			if isAcc == true {
+				flush(&accType, &accBuffer, &tokens)
+				isAcc = false
 			}
 			tokens = append(tokens, NewTokenString(TokenLParen, glyph))
-			// rparen
+
 		} else if glyph == ")" {
-			if accumulating == true {
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-				accumulating = false
+			if isAcc == true {
+				flush(&accType, &accBuffer, &tokens)
+				isAcc = false
 			}
 			tokens = append(tokens, NewTokenString(TokenRParen, glyph))
-			// opening " of a string literal
-			// the overrideState stuff takes care of the closing "
+
 		} else if glyph == "\"" {
-			if accumulating == true {
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
+			if isAcc == true {
+				flush(&accType, &accBuffer, &tokens)
 			}
-			accumulating = true
-			accumulatingType = TokenStringLiteral
-			overrideState = overrideString
-			// identify any operators
-			// normally they'll be a single character, but >= and <= aren't
-		} else if strings.ContainsAny(glyph, operatorChars) && (accumulatingType == TokenOp || accumulatingType == TokenNone) {
-			// handle >= and <= correctly
-			if (glyph == ">" || glyph == "<") && (peek(input, index) == '=') {
-				accumulating = true
-				accumulatingType = TokenOp
-				accumulatorBuffer.WriteString(glyph)
+			isAcc = true
+			accType = TokenStringLiteral
+			override = overrideString
+
+		} else if strings.ContainsAny(glyph, operatorChars) &&
+			(accType == TokenOp || accType == TokenNone) {
+			if (glyph == ">" || glyph == "<") && (peek(input, i) == '=') {
+				isAcc = true
+				accType = TokenOp
+				accBuffer.WriteString(glyph)
+
 			} else {
-				// did we already accumulate > or < and are now on =?
-				if accumulating == true && glyph == "=" {
-					accumulatorBuffer.WriteString(glyph)
-					flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-					accumulating = false
+				if isAcc == true && glyph == "=" {
+					accBuffer.WriteString(glyph)
+					flush(&accType, &accBuffer, &tokens)
+					isAcc = false
 				} else {
-					// simplest case if we found a single-character op, just inject it directly
 					tokens = append(tokens, NewTokenString(TokenOp, glyph))
 				}
 			}
-			// idents delimited with | can contain pretty much any character
 		} else if glyph == "|" {
-			if accumulating == true && accumulatingType != TokenIdent && accumulatingType != TokenStringLiteral {
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-			} else if accumulating == false {
-				overrideState = overrideIdent
+			if isAcc == true && accType != TokenIdent && accType != TokenStringLiteral {
+				flush(&accType, &accBuffer, &tokens)
+			} else if isAcc == false {
+				override = overrideIdent
 			}
-			accumulating = true
-			accumulatorBuffer.WriteString(glyph)
-			accumulatingType = TokenIdent
+			isAcc = true
+			accBuffer.WriteString(glyph)
+			accType = TokenIdent
+
 		} else if glyph == "." {
-			// . is a valid character in an ident - add it to the accumulator
-			// if we were building an ident
-			if accumulating == true && accumulatingType == TokenIdent {
-				accumulatorBuffer.WriteString(glyph)
-				// we can't start an ident with . - are we building a floating point literal?
-			} else if chr := peek(input, index); !unicode.IsSpace(chr) && unicode.IsNumber(chr) {
-				accumulating = true
-				accumulatingType = TokenFloatLiteral
-				accumulatorBuffer.WriteString(glyph)
-				// there's situations where a standalone . is valid
+			if isAcc == true && accType == TokenIdent {
+				accBuffer.WriteString(glyph)
+
+			} else if chr := peek(input, i); !unicode.IsSpace(chr) && unicode.IsNumber(chr) {
+				isAcc = true
+				accType = TokenFloatLiteral
+				accBuffer.WriteString(glyph)
 			} else {
 				tokens = append(tokens, NewTokenString(TokenDot, glyph))
 			}
-			// boolean literals
-		} else if glyph == "#" || (accumulating == true && accumulatingType == TokenBoolLiteral) {
-			// make sure we didn't find a standalone #
-			if chr := peek(input, index); chr == 't' || chr == 'f' {
-				// semi-hacky way way of using the accumulator buffer to skip processing
-				// of the current glyph
-				accumulating = true
-				accumulatingType = TokenBoolLiteral
-			} else if accumulating == true {
-				// represent true as 1 and false as 0 (doh)
+
+		} else if glyph == "#" || (isAcc == true && accType == TokenBoolLiteral) {
+
+			if chr := peek(input, i); chr == 't' || chr == 'f' {
+				isAcc = true
+				accType = TokenBoolLiteral
+
+			} else if isAcc == true {
+				// true as 1 and false as 0
 				if glyph == "t" {
-					accumulatorBuffer.WriteByte(1)
+					accBuffer.WriteByte(1)
 				} else {
-					accumulatorBuffer.WriteByte(0)
+					accBuffer.WriteByte(0)
 				}
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-				accumulating = false
+				flush(&accType, &accBuffer, &tokens)
+				isAcc = false
 			} else {
-				// handle the case of just having a # hanging out all by itself
 				tokens = append(tokens, NewTokenString(TokenChar, glyph))
 			}
+
 			// ident
 		} else if unicode.IsLetter(glyphRune) {
-			// were we building a number literal beforehand?
-			if accumulating == true && accumulatingType != TokenIdent {
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
+			if isAcc == true && accType != TokenIdent {
+				flush(&accType, &accBuffer, &tokens)
 			}
-			accumulating = true
-			accumulatingType = TokenIdent
-			accumulatorBuffer.WriteString(glyph)
-			// were we building an ident and are now trying to add a special initial?
+			isAcc = true
+			accType = TokenIdent
+			accBuffer.WriteString(glyph)
+
 		} else if strings.ContainsAny(glyph, specialInitials) {
-			if accumulating == true && accumulatingType == TokenIdent {
-				accumulatorBuffer.WriteString(glyph)
+			if isAcc == true && accType == TokenIdent {
+				accBuffer.WriteString(glyph)
 			} else {
 				tokens = append(tokens, NewTokenString(TokenChar, glyph))
 			}
-			// number literal
+
 		} else if unicode.IsNumber(glyphRune) {
-			if accumulating == true && accumulatingType == TokenIdent {
-				flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
+			if isAcc == true && accType == TokenIdent {
+				identContainsNumber = true
 			}
-			accumulating = true
-			// only declare that we are accumulating an int if we didn't see a . already
-			if accumulatingType != TokenFloatLiteral {
-				accumulatingType = TokenIntLiteral
+			isAcc = true
+			if accType != TokenFloatLiteral {
+				if identContainsNumber {
+					// do nothing. dont change accumulator type
+				} else {
+					accType = TokenIntLiteral
+				}
 			}
-			accumulatorBuffer.WriteString(glyph)
-			// we're not sure what this character is, let the parser deal with it
+			accBuffer.WriteString(glyph)
+
 		} else {
 			tokens = append(tokens, NewTokenString(TokenChar, glyph))
 		}
 	}
-	// corner case if the input string while we're still accumulating
-	// should never happen in proper Scheme, but still...
-	if accumulating == true {
-		flushAccumulator(&accumulatingType, &accumulatorBuffer, &tokens)
-		accumulating = false
+	if isAcc == true {
+		flush(&accType, &accBuffer, &tokens)
+		isAcc = false
 	}
 	return tokens
 }

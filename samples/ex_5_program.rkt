@@ -1,5 +1,8 @@
 #lang racket
 
+(define (area x) (* pi 2 x x))
+(define pi 3.14)
+(display (area 10))
 (define (foo x)
     (define (identity y) y)
     (cond
@@ -10,5 +13,5 @@
 
 (define bar 20)
 
-(foo bar)
+(display (foo bar))
 

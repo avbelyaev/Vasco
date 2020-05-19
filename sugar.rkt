@@ -6,13 +6,13 @@
 
 (define (simple? exp)
   (match exp
-    [`(λ . ,_)     #f]
-    [(? number?)   #t]
-    [(? string?)   #t]
-    [(? boolean?)  #t]
-    [`(quote . ,_) #t]
-    ['(void)       #t]
-    [else          #f]))
+    [`(lambda . ,_)     #f]
+    [(? number?)        #t]
+    [(? string?)        #t]
+    [(? boolean?)       #t]
+    [`(quote . ,_)      #t]
+    ['(void)            #t]
+    [else               #f]))
 
 (define (simpleDefine? def)
   (match def
@@ -29,11 +29,11 @@
     (match exp
       ; ... -> matches any number of values of preceding pattern;
       ; .   -> shorthand for cons (aka "make a list")
-      [`(define (,f ,params ...) . ,body)           `(define ,f (λ ,params . ,body))]
+      [`(define (,f ,params ...) . ,body)           `(define ,f (lambda ,params . ,body))]
       ; regular defines do not bother us - leave them as is
       [`(define ,v ,any)                            `(define ,v ,any)]
       ; for any other expr create a define
-      [any                                          `(define ,(gensym '_) ,any)]))
+      [any                                          `(define ,(gensym "G") ,any)]))
 
   (map desugarer exprs))
 
@@ -60,9 +60,18 @@
 
     ; ,@ == unquote-splicing
     ; let -> lambda
-    [`(let ((,vs ,es) ...) . ,body)
-     `((lambda ,vs ,(desugarBody body))
-       ,@(map desugarExp es))]
+    [`(let ((,vars ,vals) ...) . ,body)             `((lambda ,vars ,(desugarBody body))
+                                                               ,@(map desugarExp vals))]
+
+     [`(letrec ((,vs ,es) ...) . ,body)             ((displayln "---")
+                                                    (displayln vs)
+                                                    (displayln es)
+                                                    (displayln "---")
+                                                    (desugarExp
+                                                        `(let ,(for/list ([v vs])
+                                                                (list v '(void)))
+                                                            ,@(map (lambda (v e) `(set! ,v ,e)) vs es)
+                                                        ,@body)))]
 
     [`(lambda ,params . ,body)                      `(lambda ,params ,(desugarBody body))]
 
@@ -110,7 +119,7 @@
     (partition
      simpleDefine?
      prog
-     (λ (variables complex)
+     (lambda (variables complex)
        (define funcDeclarations
          (for/list ([c complex])
            (match c

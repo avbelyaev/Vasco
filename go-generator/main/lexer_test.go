@@ -2,35 +2,9 @@ package main
 
 import (
 	"bytes"
-	"encoding/binary"
-	"fmt"
-	"math"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
-
-// convenience functions to grab the value of the underlying byte buffer of a token
-func getProperValue(input *Token) string {
-	if input.Type == TokenIntLiteral {
-		convertedNum := getIntValue(input)
-		return fmt.Sprint(convertedNum)
-	} else if input.Type == TokenFloatLiteral {
-		convertedNum := getFloatValue(input)
-		return fmt.Sprint(convertedNum)
-	} else {
-		return getStringValue(input)
-	}
-}
-func getStringValue(input *Token) string {
-	return input.Value.String()
-}
-func getIntValue(input *Token) int64 {
-	num, _ := binary.Varint(input.Value.Bytes())
-	return num
-}
-func getFloatValue(input *Token) float64 {
-	bits := binary.LittleEndian.Uint64(input.Value.Bytes())
-	return math.Float64frombits(bits)
-}
 
 func NewTokenNum(tokenType TokenType, tokenString string) *Token {
 	token := NewTokenString(tokenType, tokenString)
@@ -38,29 +12,14 @@ func NewTokenNum(tokenType TokenType, tokenString string) *Token {
 	return token
 }
 
-func equalTokens(first *Token, second *Token) bool {
-	if first.Type != second.Type {
-		return false
-	} else if getProperValue(first) == getProperValue(second) {
-		return true
-	} else {
-		return false
-	}
-}
-
 func checkTokens(tokens []*Token, expectedTokens []*Token, t *testing.T) {
 	for index, token := range tokens {
 		expected := expectedTokens[index]
-		if equalTokens(token, expected) == false {
-			t.Error("Incorrect token, got",
-				getProperValue(token),
-				"expected",
-				getProperValue(expected))
-		}
+		assert.Equal(t, token.ValueStr, expected.ValueStr)
+		assert.Equal(t, token.Type, expected.Type)
 	}
 }
 
-// test lexing a single s-expression
 func TestLexSingleExp(t *testing.T) {
 	tokens := LexExp("(abc def ghi)")
 	expectedTokens := []*Token{
@@ -72,7 +31,17 @@ func TestLexSingleExp(t *testing.T) {
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test lexing nested s-expressions
+func TestLexIdentifierWithNumbers(t *testing.T) {
+	tokens := LexExp("(define fuck123 4.56)")
+	expectedTokens := []*Token{
+		NewTokenString(TokenLParen, "("),
+		NewTokenString(TokenIdent, "define"),
+		NewTokenString(TokenIdent, "fuck123"),
+		NewTokenString(TokenFloatLiteral, "4.56"),
+		NewTokenString(TokenRParen, ")")}
+	checkTokens(tokens, expectedTokens, t)
+}
+
 func TestLexNestedExp(t *testing.T) {
 	tokens := LexExp("(abc (def ghi (jkl)))")
 	expectedTokens := []*Token{
@@ -89,7 +58,6 @@ func TestLexNestedExp(t *testing.T) {
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test to make sure whitespace is properly ignored
 func TestIgnoreExtraWhitespace(t *testing.T) {
 	tokens := LexExp("( ab   cd efg)")
 	expectedTokens := []*Token{
@@ -101,7 +69,6 @@ func TestIgnoreExtraWhitespace(t *testing.T) {
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test corner case where the is no closing rparen and only EOL/EOF
 func TestLexIdentCorner(t *testing.T) {
 	tokens := LexExp("(abc")
 	expectedTokens := []*Token{
@@ -110,7 +77,6 @@ func TestLexIdentCorner(t *testing.T) {
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test number literals
 func TestLexNumberLiterals(t *testing.T) {
 	tokens := LexExp("(123 abc def 456.789 .012 345)")
 	expectedTokens := []*Token{
@@ -125,7 +91,6 @@ func TestLexNumberLiterals(t *testing.T) {
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test special characters
 func TestIdentSpecial(t *testing.T) {
 	tokens := LexExp("ab.c . d|ef? |gh +i|")
 	expectedTokens := []*Token{
@@ -136,7 +101,6 @@ func TestIdentSpecial(t *testing.T) {
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test operators
 func TestOps(t *testing.T) {
 	tokens := LexExp("(>= 150 (* (+ 10 3.2) 5))")
 	expectedTokens := []*Token{
@@ -156,7 +120,6 @@ func TestOps(t *testing.T) {
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test newline
 func TestNewline(t *testing.T) {
 	tokens := LexExp("(ab\ncd\nef)")
 	expectedTokens := []*Token{
@@ -168,26 +131,23 @@ func TestNewline(t *testing.T) {
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test to make sure single-constant expressions are lexed/converted correctly
 func TestSingleFloat(t *testing.T) {
 	tokens := LexExp("3.14")
 	expectedTokens := []*Token{NewTokenNum(TokenFloatLiteral, "3.14")}
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test string literals
 func TestString(t *testing.T) {
 	tokens := LexExp("\"la li lu le lo\"")
 	expectedTokens := []*Token{NewTokenString(TokenStringLiteral, "la li lu le lo")}
 	checkTokens(tokens, expectedTokens, t)
 }
 
-// test bool literals
 func TestBool(t *testing.T) {
 	tokens := LexExp("#t #f bla")
 	expectedTokens := []*Token{
-		NewTokenRaw(TokenBoolLiteral, *bytes.NewBuffer([]byte{1}), "1"),
-		NewTokenRaw(TokenBoolLiteral, *bytes.NewBuffer([]byte{0}), "0"),
+		NewTokenRaw(TokenBoolLiteral, *bytes.NewBuffer([]byte{1}), "#t"),
+		NewTokenRaw(TokenBoolLiteral, *bytes.NewBuffer([]byte{0}), "#f"),
 		NewTokenString(TokenIdent, "bla")}
 	checkTokens(tokens, expectedTokens, t)
 }
