@@ -127,25 +127,16 @@ node print.c.js
 
 ## Notes
 
-- стоит сверяться с Chicken Scheme - там есть "C-view" фича. <https://wiki.call-cc.org/man/4/Debugging>, 
-которая говорит как выглядит scheme, будучи скомпиленным в C.
+
+- то благодаря чему все получилось: https://medium.com/@sendilkumarn/getting-started-into-go-and-webassembly-8491b133a616
 
 
-- образ с emscripten'ом: <https://hub.docker.com/r/trzeci/emscripten/>
+## в презентацию
 
-- mdn: <https://developer.mozilla.org/en-US/docs/WebAssembly/C_to_wasm>
-
-
-- browser vs server
-    - security policies, premissions, restrictions in Chrome 
-    - stack of existing browsers including older versions -> compile, transpile, ...
-    - access to FS
-    
-- если контейнер не держится - `docker run -d -v $(pwd):$(pwd) trzeci/emscripten sleep infinity`
+- https://drive.google.com/file/d/1ghFPbIZ4r8-291f6weszNxLwMXu1U8kx/view
 
 
-
-## В презентацию:
+## В записку:
 
 https://habr.com/ru/post/436698/
 
@@ -176,8 +167,14 @@ Hoare logic is a specific formal system for reasoning rigorously about the corre
 It uses axiomatic techniques to define programming language semantics and argue about the correctness 
 of programs through assertions known as Hoare triples.
 
+- [ЗАБРАТЬ В ДИПЛОМ!] гениальная мысль про доказательство от малого к большему:  if a mathematician wouldn’t be able to rely on a smaller 
+theorem (a lemma) in proving a bigger theorem and would instead have to look at a proof of that smaller theorem, 
+what would be the point in having a smaller theorem proved separately? отсюда: https://dimjasevic.net/marko/2018/10/23/typed-functional-programming-and-software-correctness/
+
 источники:
 
 - Х. Абельсона и Д. Сассмана «Структура и интерпретация компьютерных программ».
 - https://en.wikipedia.org/wiki/Invariant-based_programming
 - логика хоара: http://homepage.divms.uiowa.edu/~slonnegr/plf/Book/Chapter11.pdf
+- https://www.williamjbowman.com/blog/2017/03/24/what-even-is-compiler-correctness/
+- Type-Preserving Compiler from Lambda Calculus to  Assembly Language: http://adam.chlipala.net/papers/CtpcPLDI07/CtpcPLDI07.pdf
