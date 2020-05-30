@@ -178,3 +178,6 @@ what would be the point in having a smaller theorem proved separately? отсю�
 - логика хоара: http://homepage.divms.uiowa.edu/~slonnegr/plf/Book/Chapter11.pdf
 - https://www.williamjbowman.com/blog/2017/03/24/what-even-is-compiler-correctness/
 - Type-Preserving Compiler from Lambda Calculus to  Assembly Language: http://adam.chlipala.net/papers/CtpcPLDI07/CtpcPLDI07.pdf
+
+
+- модели вычислений одинаковы: https://cs.stackexchange.com/questions/106004/what-are-the-other-language-models-of-computation-similar-to-lambda-calculus

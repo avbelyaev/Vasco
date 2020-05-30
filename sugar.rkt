@@ -161,12 +161,13 @@
 ; NOTE: remove first and last parentheses from expression when pasting here
 (define stdInStub
   '(
+    (define foo 5)
     (define (fact n)
-      			(if (= n 0)
-          				1
-          				(* n (fact (- n 1)))))
+        (if (= n 0)
+            1
+            (* n (fact (- n 1)))))
 
-    (display (fact 5))
+    (display (fact foo))
     ))
 
 
