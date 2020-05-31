@@ -76,7 +76,6 @@
     [`(lambda ,params . ,body)                      `(lambda ,params ,(desugarBody body))]
 
     ; cond -> nested IFs
-    [`(cond)                                        '(void)]
     [`(cond (else ,exp))                            (desugarExp exp)]
     [`(cond (,condition ,then))                     `(if ,(desugarExp condition)
                                                          ,(desugarExp then)
