@@ -180,4 +180,10 @@ what would be the point in having a smaller theorem proved separately? отсю�
 - Type-Preserving Compiler from Lambda Calculus to  Assembly Language: http://adam.chlipala.net/papers/CtpcPLDI07/CtpcPLDI07.pdf
 
 
-- модели вычислений одинаковы: https://cs.stackexchange.com/questions/106004/what-are-the-other-language-models-of-computation-similar-to-lambda-calculus
+- FSM https://computationstructures.org/notes/fsms/notes.html
+- [забрать в записку] почему модели вычислений одинаковы: https://cs.stackexchange.com/questions/106004/what-are-the-other-language-models-of-computation-similar-to-lambda-calculus
+
+- что-то про лямбди-исчисление: 
+- https://cstheory.stackexchange.com/questions/21705/what-is-the-contribution-of-lambda-calculus-to-the-field-of-theory-of-computatio
+- https://cstheory.stackexchange.com/questions/1117/realizability-theory-difference-in-power-between-lambda-calculus-and-turing-mac
+- https://cstheory.stackexchange.com/questions/3650/historical-reasons-for-adoption-of-turing-machine-as-primary-model-of-computatio/3680#3680
