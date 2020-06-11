@@ -171,6 +171,8 @@ of programs through assertions known as Hoare triples.
 theorem (a lemma) in proving a bigger theorem and would instead have to look at a proof of that smaller theorem, 
 what would be the point in having a smaller theorem proved separately? отсюда: https://dimjasevic.net/marko/2018/10/23/typed-functional-programming-and-software-correctness/
 
+- lmabda vs closure: https://stackoverflow.com/questions/220658/what-is-the-difference-between-a-closure-and-a-lambda
+
 источники:
 
 - Х. Абельсона и Д. Сассмана «Структура и интерпретация компьютерных программ».

@@ -8,5 +8,5 @@
 
 int main()
 {
-    printf("fuck you!\n");
+    printf("duck!\n");
 }
