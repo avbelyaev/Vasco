@@ -188,3 +188,6 @@ docker run -it --rm -u $(id -u):$(id -g) -v $PWD:/src -w /src jungomi/wabt wat2w
   - navigate to http://localhost:8080
   - insert args and hit "Run"
 
+
+
+TODO плагин для подсветки WAT в идее

@@ -189,17 +189,12 @@ func GenerateCode(node AstNode) (string, error) {
 		call := node.(*CallExp)
 		callName := GetIdentifier(call.WhatToCall)
 
-		// TODO generate print separately since it doesn allow creating vars inside call
-		if callName == "display" {
-			callName = "fmt.Print"
-		} else if callName == "displayln" {
-			callName = "fmt.Println"
-		}
 		callArgs, err := GenerateCode(call.Children()[0])
 		if nil != err {
 			return "", err
 		}
-		c := fmt.Sprintf("%s(%s)", callName, callArgs)
+		c := callArgs + "\n"
+		c += fmt.Sprintf("call $%s\n", callName)
 		return c, nil
 
 	} else if nodeType == IfNode {
@@ -218,7 +213,7 @@ func GenerateCode(node AstNode) (string, error) {
 			if nil != err {
 				return "", err
 			}
-			c += fmt.Sprintf("(then (%s))\n", thenString)
+			c += fmt.Sprintf("(then %s)\n", thenString)
 		}
 
 		// else
@@ -227,7 +222,7 @@ func GenerateCode(node AstNode) (string, error) {
 			if nil != err {
 				return "", err
 			}
-			c += fmt.Sprintf("(else (%s))\n", elseString)
+			c += fmt.Sprintf("(else %s)\n", elseString)
 		}
 		c += ")\n"
 		return c, err
@@ -251,8 +246,10 @@ func generateArgString(args []string) string {
 }
 
 var sourceCode = `
-(define (abs x)
-	(if (>= x 0) 1 0))
+(define (fact n)
+	(if (= n 0)
+		1
+		(* n (fact (- n 1)))))
 `
 
 func main() {
