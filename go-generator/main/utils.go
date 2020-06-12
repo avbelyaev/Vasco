@@ -52,28 +52,29 @@ func IsLiteral(nNode *node.AstNode) bool {
 	return false
 }
 
-func GetOperator(nNode *node.AstNode) string {
+// see https://webassembly.github.io/spec/core/syntax/instructions.html#syntax-instr-numeric
+func GetOperation(nNode *node.AstNode) string {
 	nodeType := (*nNode).Type()
 	switch nodeType {
 	case node.LtNode:
-		return "<"
+		return "lt"
 	case node.LteNode:
-		return "<="
+		return "le"
 	case node.GtNode:
-		return ">"
+		return "gt"
 	case node.GteNode:
-		return ">="
+		return "ge"
 	case node.EqNode:
-		return "=="
+		return "eq"
 
 	case node.AddNode:
-		return "+"
+		return "i32.add"
 	case node.SubNode:
-		return "-"
+		return "i32.sub"
 	case node.MulNode:
-		return "*"
+		return "i32.mul"
 	case node.DivNode:
-		return "/"
+		return "i32.div"
 	}
 	panic("unexpected type")
 }

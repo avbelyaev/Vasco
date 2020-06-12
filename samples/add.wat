@@ -1,7 +1,13 @@
+;;
+;; (define (add x y)
+;; 	(+ x y))
+;;
 (module
-  (func $add (param $lhs i32) (param $rhs i32) (result i32)
-    get_local $lhs
-    get_local $rhs
-    i32.add)
-  (export "add" (func $add))
+(func $add (param $x i32) (param $y i32)  (result i32)
+get_local $x
+get_local $y
+i32.add
+)
+(export "dummy" (func $add))
+
 )

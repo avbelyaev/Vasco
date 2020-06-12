@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"errors"
 	"fmt"
 	"github.com/palantir/stacktrace"
@@ -14,10 +15,6 @@ import (
 
 const outputDirName = "server"
 const outputModuleName = "module.wat"
-
-var programHeader = `(module
-`
-var programFooter = ")"
 
 var ProgramRoot *Program
 var LambdaCounter int
@@ -49,20 +46,29 @@ func GenerateForEachRoot(program *Program) (string, error) {
 	identifierNames = make(map[string]string, 10)
 	LambdaCounter = 0
 	NodeCounter = 0
-	c := programHeader
+
+	// generate comment block before program body
+	var targetCode string
+	scanner := bufio.NewScanner(strings.NewReader(sourceCode))
+	for scanner.Scan() {
+		targetCode += ";; " + scanner.Text() + "\n"
+	}
+	targetCode += ";;\n"
+
+	targetCode += "(module\n"
 	for _, root := range program.Children() {
 		generatedRoot, err := GenerateCode(root)
 		if nil != err {
 			return "", stacktrace.Propagate(err,
 				"error while generating code of root node of type %v: %s", root.Type(), root.String())
 		}
-		c += generatedRoot + "\n"
+		targetCode += generatedRoot + "\n"
 		log.Infof("Generated code for root node of type %v: %s", root.Type(), root.String())
 	}
-	c += programFooter
+	targetCode += ")"
 
 	log.Infof("Generated successfully")
-	return c, nil
+	return targetCode, nil
 }
 
 func GenerateCode(node AstNode) (string, error) {
@@ -76,8 +82,10 @@ func GenerateCode(node AstNode) (string, error) {
 		if nil != err {
 			return "", err
 		}
-		opeartor := GetOperator(&node)
-		c := fmt.Sprintf("%s %s %s", lhsString, opeartor, rhsString)
+		operation := GetOperation(&node)
+		c := lhsString
+		c += rhsString
+		c += operation
 		return c, nil
 
 		// TODO maybe merge arithmetic & comparison
@@ -90,13 +98,13 @@ func GenerateCode(node AstNode) (string, error) {
 		if nil != err {
 			return "", err
 		}
-		opeartor := GetOperator(&node)
+		opeartor := GetOperation(&node)
 		c := fmt.Sprintf("%s %s %s", lhsString, opeartor, rhsString)
 		return c, nil
 
 	} else if nodeType == IntNode {
 		intNode := node.(*IntLiteral)
-		c := fmt.Sprintf("%d", intNode.Value)
+		c := fmt.Sprintf("i32.const %d\n", intNode.Value)
 		return c, nil
 
 	} else if nodeType == IdentNode {
@@ -125,7 +133,6 @@ func GenerateCode(node AstNode) (string, error) {
 			lambda := defNode.Children()[0].(*LambdaExp)
 			funcName := GetIdentifier(defNode.Name)
 			argString := generateArgString(lambda.Args)
-			// to be able to make recursive call
 			c := fmt.Sprintf("(func $%s %s (result i32)\n", funcName, argString)
 
 			// extract body except last one expr
@@ -216,7 +223,7 @@ func GenerateCode(node AstNode) (string, error) {
 		if nil != err {
 			return "", err
 		}
-		c := fmt.Sprintf("if %s {\n", condString)
+		c := fmt.Sprintf("(if %s {\n", condString)
 
 		// then
 		if IsLeaf(branch.Then) {
@@ -259,11 +266,13 @@ func generateArgString(args []string) string {
 	return argString
 }
 
+var sourceCode = `
+(define (abs x)
+	(if (> x 0) 1 0))
+`
+
 func main() {
-	tokens := LexExp(`
-    (define (identity x)
-        x)
-	`)
+	tokens := LexExp(sourceCode)
 	root, err := ParseTokens(tokens)
 	Check(err)
 
