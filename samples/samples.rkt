@@ -23,6 +23,13 @@
     ((= x 0) 0)
     (else 1)))
 
+(let ((a (list 1 2 3))
+      (b (list 4 5 6)))
+      (cons a b))
+
+(let* ((x 1)
+       (y (- x 5)))
+  (+ x y))
 
 (define (fact n)
   (if (= n 0)

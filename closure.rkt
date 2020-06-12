@@ -4,16 +4,6 @@
 (include "utils.rkt")
 
 
-; program being closure-converted
-; TODO: read from stdin
-; (define test
-;     '(
-;        lambda (f)
-;         (lambda (x)
-;          (f x a))
-;      ))
-
-
 
 (define (substitute sub exp)
   (match exp
@@ -111,6 +101,14 @@
     ; ---
     [else (error (format "error on convertClosure: ~s\n" exp))]))
 
+; program being closure-converted
+; TODO: read from stdin
+ (define test
+     '(
+        lambda (f)
+         (lambda (x z)
+            (f x z a))
+      ))
 
 (define (main input)
   (displayln "converting closure...")
