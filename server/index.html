@@ -4,23 +4,21 @@
 <head>
     <meta charset="utf-8">
     <title>Wasco playground</title>
+    <style>
+        html body {
+            font-family: "Lucida Console", Monaco, monospace;
+        }
+    </style>
 </head>
 
 <body>
-<script>
-
-    function run() {
-        WebAssembly.instantiateStreaming(fetch('module.wasm'))
-            .then(obj => {
-                const { dummy } = obj.instance.exports;
-
-                // TODO писать не в лог а в окно
-                console.log(dummy(123));
-            });
-    }
-
-</script>
+<input type="text" minlength="16" id="runArgs"/>
 <button onClick="run();" id="runButton">Run</button>
+<div class="logger">
+    <div class="logger-content">
+        <!-- logging goes here -->
+    </div>
+</div>
+<script src="index.js"></script>
 </body>
-
 </html>
