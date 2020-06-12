@@ -57,15 +57,15 @@ func GetOperation(nNode *node.AstNode) string {
 	nodeType := (*nNode).Type()
 	switch nodeType {
 	case node.LtNode:
-		return "lt"
+		return "i32.lt_s"
 	case node.LteNode:
-		return "le"
+		return "i32.le_s"
 	case node.GtNode:
-		return "gt"
+		return "i32.gt_s"
 	case node.GteNode:
-		return "ge"
+		return "i32.ge_s"
 	case node.EqNode:
-		return "eq"
+		return "i32.eq"
 
 	case node.AddNode:
 		return "i32.add"

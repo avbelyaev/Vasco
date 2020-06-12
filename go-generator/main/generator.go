@@ -73,7 +73,7 @@ func GenerateForEachRoot(program *Program) (string, error) {
 
 func GenerateCode(node AstNode) (string, error) {
 	nodeType := node.Type()
-	if IsArithmetic(&node) {
+	if IsArithmetic(&node) || IsComparison(&node) {
 		lhsString, err := GenerateCode(node.Children()[0])
 		if nil != err {
 			return "", err
@@ -85,21 +85,7 @@ func GenerateCode(node AstNode) (string, error) {
 		operation := GetOperation(&node)
 		c := lhsString
 		c += rhsString
-		c += operation
-		return c, nil
-
-		// TODO maybe merge arithmetic & comparison
-	} else if IsComparison(&node) {
-		lhsString, err := GenerateCode(node.Children()[0])
-		if nil != err {
-			return "", err
-		}
-		rhsString, err := GenerateCode(node.Children()[1])
-		if nil != err {
-			return "", err
-		}
-		opeartor := GetOperation(&node)
-		c := fmt.Sprintf("%s %s %s", lhsString, opeartor, rhsString)
+		c += operation + "\n"
 		return c, nil
 
 	} else if nodeType == IntNode {
@@ -223,7 +209,8 @@ func GenerateCode(node AstNode) (string, error) {
 		if nil != err {
 			return "", err
 		}
-		c := fmt.Sprintf("(if %s {\n", condString)
+		c := condString
+		c += "(if (result i32)\n"
 
 		// then
 		if IsLeaf(branch.Then) {
@@ -231,10 +218,8 @@ func GenerateCode(node AstNode) (string, error) {
 			if nil != err {
 				return "", err
 			}
-			c += fmt.Sprintf("var last = %s\n", thenString)
-			c += fmt.Sprint("return last\n")
+			c += fmt.Sprintf("(then (%s))\n", thenString)
 		}
-		c += fmt.Sprintf("} else {\n")
 
 		// else
 		if IsLeaf(branch.Else) {
@@ -242,10 +227,9 @@ func GenerateCode(node AstNode) (string, error) {
 			if nil != err {
 				return "", err
 			}
-			c += fmt.Sprintf("var last = %s\n", elseString)
-			c += fmt.Sprint("return last\n")
+			c += fmt.Sprintf("(else (%s))\n", elseString)
 		}
-		c += fmt.Sprintf("}")
+		c += ")\n"
 		return c, err
 
 	} else if nodeType == VoidNode {
@@ -268,7 +252,7 @@ func generateArgString(args []string) string {
 
 var sourceCode = `
 (define (abs x)
-	(if (> x 0) 1 0))
+	(if (>= x 0) 1 0))
 `
 
 func main() {
