@@ -12,19 +12,12 @@ import (
 	. "wascho/go-generator/main/node"
 )
 
-var programHeader = `
-package main
+const outputDirName = "server"
+const outputModuleName = "module.wat"
 
-import "fmt"
-
-func main() {
+var programHeader = `(module
 `
-
-var programFooter = `
-// avoiding unused import of "fmt"
-fmt.Println()
-}
-`
+var programFooter = ")"
 
 var ProgramRoot *Program
 var LambdaCounter int
@@ -108,7 +101,8 @@ func GenerateCode(node AstNode) (string, error) {
 
 	} else if nodeType == IdentNode {
 		ident := node.(*IdentExp)
-		return ident.Name, nil
+		c := fmt.Sprintf("get_local $%s\n", ident.Name)
+		return c, nil
 
 	} else if nodeType == LambdaNode {
 		lambda := node.(*LambdaExp)
@@ -132,10 +126,9 @@ func GenerateCode(node AstNode) (string, error) {
 			funcName := GetIdentifier(defNode.Name)
 			argString := generateArgString(lambda.Args)
 			// to be able to make recursive call
-			c := fmt.Sprintf("var %s func(%s) int\n", funcName, argString)
-			c += fmt.Sprintf("%s = func(%s) int {\n", funcName, argString)
+			c := fmt.Sprintf("(func $%s %s (result i32)\n", funcName, argString)
 
-			// extract body expect last one expr
+			// extract body except last one expr
 			var i = 0
 			for i = 0; i < len(lambda.Children())-1; i++ {
 				expr := lambda.Children()[i]
@@ -152,9 +145,8 @@ func GenerateCode(node AstNode) (string, error) {
 				return "", err
 			}
 			c += lastExpr + "\n"
-			//c += fmt.Sprintf("var last = %s\n", lastExpr)
-			//c += fmt.Sprint("return last\n}\n")
-			c += "}\n"
+			c += ")\n"
+			c += fmt.Sprintf("(export \"dummy\" (func $%s))\n", funcName)
 			return c, nil
 
 		} else if defNode.DefType == Variable {
@@ -262,32 +254,15 @@ func GenerateCode(node AstNode) (string, error) {
 func generateArgString(args []string) string {
 	argString := ""
 	for _, arg := range args {
-		argString += fmt.Sprintf("%s int, ", arg)
+		argString += fmt.Sprintf("(param $%s i32) ", arg)
 	}
-	argString = argString[:len(argString)-2]
 	return argString
-}
-
-type Value struct {
-	value interface{}
-}
-
-func NewValue(v interface{}) *Value {
-	value := &Value{
-		value: v,
-	}
-	return value
 }
 
 func main() {
 	tokens := LexExp(`
-		  (define foo 5)
-    (define (fact n)
-        (if (= n 0)
-            1
-            (* n (fact (- n 1)))))
-
-    (display (fact foo))
+    (define (identity x)
+        x)
 	`)
 	root, err := ParseTokens(tokens)
 	Check(err)
@@ -303,13 +278,12 @@ func main() {
 }
 
 func emitCode(code string) {
-	outDir := "server/static"
-	if _, err := os.Stat(outDir); os.IsNotExist(err) {
-		err = os.Mkdir(outDir, 0700)
+	if _, err := os.Stat(outputDirName); os.IsNotExist(err) {
+		err = os.Mkdir(outputDirName, 0700)
 		Check(err)
 	}
 
-	fileName := path.Join(outDir, "out.go")
+	fileName := path.Join(outputDirName, outputModuleName)
 	if _, err := os.Stat(fileName); os.IsExist(err) {
 		err = os.Remove(fileName)
 		Check(err)

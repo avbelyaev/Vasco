@@ -185,7 +185,7 @@ docker run -it --rm -u $(id -u):$(id -g) -v $PWD:/src -w /src jungomi/wabt wat2w
 - run server from `server` dir
   - `go run server.go`
 - open browser
-  - navigate to http://localhost:9999/ and open Dev console
+  - navigate to http://localhost:8080 and open Dev console
   - hit "Run" and see console output
 
 

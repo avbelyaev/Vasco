@@ -10,10 +10,11 @@
 <script>
 
     function run() {
-        // console.clear();
         WebAssembly.instantiateStreaming(fetch('module.wasm'))
             .then(obj => {
-                console.log(obj.instance.exports.tmp(6));
+                const { dummy } = obj.instance.exports;
+
+                console.log(dummy(123));
             });
     }
 
