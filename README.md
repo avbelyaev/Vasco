@@ -180,13 +180,12 @@ node lambdajam/sum.c.js
   - run `go run go-generator/main/generator.go go-generator/main/lexer.go go-generator/main/parser.go` to get output
 - convert generated WAT (WebAssembly Text Format) to WASM (binary) via WABT (WASM Binary Toolkit):
 ```bash
-docker run -it --rm -u $(id -u):$(id -g) -v $PWD:/src -w /src jungomi/wabt wat2wasm server/static/out.wat -o server/static/out.wasm
+docker run -it --rm -u $(id -u):$(id -g) -v $PWD:/src -w /src jungomi/wabt wat2wasm server/module.wat -o server/module.wasm
 ```
-- run server
+- run server from `server` dir
   - `go run server.go`
 - open browser
-  - navigate to http://localhost:9999/
-  - open `wasm_exec.html` and open Dev console
+  - navigate to http://localhost:9999/ and open Dev console
   - hit "Run" and see console output
 
 

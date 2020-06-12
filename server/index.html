@@ -11,9 +11,9 @@
 
     function run() {
         // console.clear();
-        WebAssembly.instantiateStreaming(fetch('out.wasm'))
+        WebAssembly.instantiateStreaming(fetch('module.wasm'))
             .then(obj => {
-                console.log(obj.instance.exports.add(1, 4));
+                console.log(obj.instance.exports.tmp(6));
             });
     }
 
