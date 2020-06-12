@@ -246,10 +246,10 @@ func generateArgString(args []string) string {
 }
 
 var sourceCode = `
-(define (fact n)
-	(if (= n 0)
+(define (fib n)
+	(if (<= n 2)
 		1
-		(* n (fact (- n 1)))))
+		(+ (fib (- n 1)) (fib (- n 2)))))
 `
 
 func main() {
