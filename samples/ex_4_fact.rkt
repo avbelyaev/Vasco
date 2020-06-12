@@ -1,8 +1,8 @@
+#lang typed/racket
 
-(display ((lambda (x)
-            (define (fact n)
+(define (fact [n : Integer]) : Integer
               (if (= n 0)
                 1
                 (* n (fact (- n 1)))))
-            (fact x))
-           5))
+
+(fact 6)
