@@ -178,13 +178,10 @@ node lambdajam/sum.c.js
 - generate code 
   - insert code into stub inside `generator.go`
   - run `go run go-generator/main/generator.go go-generator/main/lexer.go go-generator/main/parser.go` to get output
-- get Web Assembly bindings from your GO distribution (`$GO/misc/wasm`)
-  - `wasm_exec.html`
-  - `wasm_exe.js` 
-  - place bindings into `server/static`
-- generate WASM module
-  - go to `server/static` 
-  - run `GOARCH=wasm GOOS=js go build -o server/static/out.wasm server/static/out.go`
+- convert generated WAT (WebAssembly Text Format) to WASM (binary) via WABT (WASM Binary Toolkit):
+```bash
+docker run -it --rm -u $(id -u):$(id -g) -v $PWD:/src -w /src jungomi/wabt wat2wasm server/static/out.wat -o server/static/out.wasm
+```
 - run server
   - `go run server.go`
 - open browser
