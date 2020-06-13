@@ -16,7 +16,8 @@ import (
 const outputDirName = "server"
 const outputModuleName = "module.wat"
 
-var ProgramRoot *Program
+const outputModuleExportFunctionName = "dummy"
+
 var LambdaCounter int
 var identifierNames map[string]string
 
@@ -140,7 +141,9 @@ func GenerateCode(node AstNode) (string, error) {
 			}
 			c += lastExpr + "\n"
 			c += ")\n"
-			c += fmt.Sprintf("(export \"dummy\" (func $%s))\n", funcName)
+			// TODO its probably better to generate all the exports at the very end of WAT,
+			//   not immediate after function def
+			c += fmt.Sprintf("(export \"%s\" (func $%s))\n", outputModuleExportFunctionName, funcName)
 			return c, nil
 
 		} else if defNode.DefType == Variable {

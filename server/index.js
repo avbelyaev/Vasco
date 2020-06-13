@@ -4,6 +4,9 @@
 const WAT_FILE_NAME = "module.wat";
 const WASM_FILE_NAME = "module.wasm";
 
+// see generator.go
+const EXPORT_FUNCTION_NAME = "dummy";
+
 
 getRunArgs = () => {
     const runArgsElem = document.getElementById("runArgs");
@@ -29,8 +32,8 @@ run = () => {
     WebAssembly.instantiateStreaming(fetch(WASM_FILE_NAME))
         .then(obj => {
             eval(`
-                const { dummy } = obj.instance.exports;
-                const result = dummy(${getRunArgs()});
+                const { ${EXPORT_FUNCTION_NAME} } = obj.instance.exports;
+                const result = ${EXPORT_FUNCTION_NAME}(${getRunArgs()});
                 log(result);
             `)
         });
