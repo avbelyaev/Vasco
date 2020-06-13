@@ -1,28 +1,82 @@
 # Vasco
 
-Compiling Scheme to WebAssembly ... somehow 
+#### Compiling Scheme to WebAssembly ... somehow 
+
+Original Scheme program:
+```
+(define (fib n)
+    (cond
+        ((<= n 2) 1)
+        (else (+ (fib (- n 1)) (fib (- n 2))))))
+```
+
+Desugared program:
+```
+(define fib (void))
+(set! fib
+  (lambda (n)
+    (if (<= n 2)
+      1
+      (+
+        (fib (- n 1))
+        (fib (- n 2))))))
+```
+
+Generated WASM module.wat:
+```
+(module
+    (func $fib (param $n i32) (result i32)
+        get_local $n
+        i32.const 2
+        i32.le_s
+        (if (result i32)
+            (then i32.const 1)
+            (else get_local $n
+                  i32.const 1
+                  i32.sub
+                  call $fib
+                  get_local $n
+                  i32.const 2
+                  i32.sub
+                  call $fib
+                  i32.add)
+        )
+    )
+    (export "dummy" (func $fib))
+)
+```
+
+Running program in browser:
+
+![run](img/run.png)
 
 
-## TODO зачем и как работает 
-пример скормипленной проги
+## Desugarer
 
+Before:
+```
+(define foo 5)
+(define (fact n)
+    (if (= n 0)
+        1
+        (* n (fact (- n 1)))))
 
-## Desugar Scheme
+(display (fact foo))
+```
 
-- desugar example: `racket desugat.rkt`
+After:
+```
+(define foo 5)
+(define fact (void))
+(define G157 (void))
 
-TODO add example:
-
-- desugar from stdin:
-  - uncomment `;(main (read))` line
-  - run `racket sugar.rkt < programToDesugar.rkt`
-  - make sure to remove `#lang ...` header from program source code
-
-
-## Closure conversion
-
-TODO add exmaple
-
+(set! fact
+  (lambda (n)
+    (if (= n 0)
+        1
+        (* n (fact (- n 1))))))
+(set! G157 (display (fact foo)))
+```
 
 ## Quick start 
 
@@ -54,8 +108,4 @@ docker run -it --rm -u $(id -u):$(id -g) -v $PWD:/src -w /src jungomi/wabt wat2w
 
 ## Notes
 
-- racket bin on macOS: `/Applications/Racket v7.3/bin`
-
-
-
-TODO rename to Wasco
+- racket bin directory on macOS: `/Applications/Racket v7.3/bin`
