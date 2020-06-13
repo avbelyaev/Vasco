@@ -191,4 +191,4 @@ what would be the point in having a smaller theorem proved separately? отсю�
 - https://cstheory.stackexchange.com/questions/3650/historical-reasons-for-adoption-of-turing-machine-as-primary-model-of-computatio/3680#3680
 
 
-- wasm by hand: https://blog.scottlogic.com/2018/04/26/webassembly-by-hand.html
+- 

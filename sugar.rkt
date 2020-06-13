@@ -184,6 +184,9 @@
 	(displayln (pretty-format prog 40)))
 
 
-; TODO read from stdin
+; run `racket sugar.rkt < programToDesugar.rkt`
+; make sure to remove header `#lang ...`
 ;(main (read))
+
+; run: `racket sugrat.rkt`
 (main stdInStub)
