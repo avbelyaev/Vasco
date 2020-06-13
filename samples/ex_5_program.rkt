@@ -1,5 +1,7 @@
 #lang racket
 
+; this one probably has to be desugared before parse
+
 (define (area x) (* pi 2 x x))
 (define pi 3.14)
 (display (area 10))

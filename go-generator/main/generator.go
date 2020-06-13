@@ -29,9 +29,9 @@ func GetIdentifier(name string) string {
 	if fixedName, exists := identifierNames[name]; exists {
 		return fixedName
 	}
-	if strings.Contains(name, "O") {
-		noReplacementLimit := -1
-		fixed := strings.Replace(name, "O", "_", noReplacementLimit)
+	if strings.Contains(name, "-") {
+		replaceAll := -1
+		fixed := strings.Replace(name, "-", "_", replaceAll)
 		log.Infof("Fixed identifier: %s -> %s", name, fixed)
 
 		identifierNames[name] = fixed
@@ -40,7 +40,7 @@ func GetIdentifier(name string) string {
 	return name
 }
 
-func GenerateForEachRoot(program *Program) (string, error) {
+func GenerateForEachRoot(program *Program, sourceCode string) (string, error) {
 	log.Infof("Generating code")
 
 	identifierNames = make(map[string]string, 10)
@@ -95,6 +95,7 @@ func GenerateCode(node AstNode) (string, error) {
 
 	} else if nodeType == IdentNode {
 		ident := node.(*IdentExp)
+		// `get local` is a newer version of `local.get`
 		c := fmt.Sprintf("get_local $%s\n", ident.Name)
 		return c, nil
 
@@ -102,7 +103,7 @@ func GenerateCode(node AstNode) (string, error) {
 		lambda := node.(*LambdaExp)
 		argString := generateArgString(lambda.Args)
 		lambdaName := generateLambdaName()
-		//c := fmt.Sprintf("var %s func(interface{}) interface{}\n", lambdaName)
+
 		c := fmt.Sprintf("%s = func(%s) int {\n", lambdaName, argString)
 		body, err := GenerateCode(lambda.Children()[0])
 		if nil != err {
@@ -132,7 +133,7 @@ func GenerateCode(node AstNode) (string, error) {
 				c += exprString + "\n"
 			}
 
-			// TODO is leaf-node, manually extract last expr
+			// manually extract last expr
 			lastExpr, err := GenerateCode(lambda.Children()[i])
 			if nil != err {
 				return "", err
@@ -170,14 +171,6 @@ func GenerateCode(node AstNode) (string, error) {
 	} else if nodeType == SetNode {
 		setNode := node.(*SetExp)
 
-		//isCallNode := setNode.Children()[0].Type() == CallNode
-		//if isCallNode {
-		//	// TODO should be a better way
-		//	callNode := node.(*CallExp)
-		//	if callNode.WhatToCall == "display" || callNode.WhatToCall == "displayln" {
-		//
-		//	}
-		//}
 		setCode, err := GenerateCode(setNode.Children()[0])
 		if nil != err {
 			return "", stacktrace.Propagate(err,
@@ -245,26 +238,27 @@ func generateArgString(args []string) string {
 	return argString
 }
 
+// greetings roma, vlad :)
 var sourceCode = `
-(define (fib n)
-	(if (<= n 2)
-		1
-		(+ (fib (- n 1)) (fib (- n 2)))))
+(define (fact n)
+	(if (= n 0)
+ 		1
+ 		(* n (fact (- n 1)))))
 `
 
 func main() {
 	tokens := LexExp(sourceCode)
-	root, err := ParseTokens(tokens)
+	astRoot, err := ParseTokens(tokens)
 	Check(err)
 
-	ProgramRoot = root
-	code, err := GenerateForEachRoot(root)
+	targetCode, err := GenerateForEachRoot(astRoot, sourceCode)
 	if nil != err {
 		print(err)
 	}
 
-	emitCode(code)
-	log.Infof("Emitted code:\n%s", code)
+	// TODO there aren't any formatters/syntax-highlighters for WAT and Idea
+	emitCode(targetCode)
+	log.Infof("Emitted targetCode:\n%s", targetCode)
 }
 
 func emitCode(code string) {
