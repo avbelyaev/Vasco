@@ -201,6 +201,7 @@ func GenerateCode(node AstNode) (string, error) {
 			return "", err
 		}
 		c := condString
+		// see https://blog.scottlogic.com/2018/04/26/webassembly-by-hand.html
 		c += "(if (result i32)\n"
 
 		// then
