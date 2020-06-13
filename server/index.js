@@ -19,7 +19,7 @@ log = (text) => {
 
     const now = new Date();
     const currentTime = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-    const msg = `${currentTime}\t\t${getRunArgs()}\t=> ${text}<br/>`;
+    const msg = `<span class="result">${currentTime}  ${getRunArgs()}  => ${text}</span><br/>`;
 
     loggerContentsElem.innerHTML += msg;
     console.log(msg);
