@@ -51,30 +51,51 @@ func ParseTokens(tokens []*Token) (*Program, error) {
 func parseExpression(tokens []*Token) (AstNode, error) {
 	currentType := tokens[IDX].Type
 	if currentType == TokenIntLiteral {
+		intValue, _ := binary.Varint(tokens[IDX].Value.Bytes())
 		IDX++
-		intValue, _ := binary.Varint(tokens[IDX-1].Value.Bytes())
 		return NewIntLiteral(intValue), nil
 
 	} else if currentType == TokenFloatLiteral {
-		IDX++
-		bits := binary.LittleEndian.Uint64(tokens[IDX-1].Value.Bytes())
+		bits := binary.LittleEndian.Uint64(tokens[IDX].Value.Bytes())
 		floatValue := math.Float64frombits(bits)
+		IDX++
 		return NewFloatLiteral(floatValue), nil
 
 	} else if currentType == TokenStringLiteral {
+		literal := tokens[IDX]
 		IDX++
-		literal := tokens[IDX-1]
 		return NewStringLiteral(literal.ValueStr), nil
 
 	} else if currentType == TokenBoolLiteral {
+		literal := tokens[IDX]
 		IDX++
-		literal := tokens[IDX-1]
 		return NewBoolLiteral(literal.Value.Bytes()[0] == 1), nil
 
 	} else if currentType == TokenIdent {
+		identToken := tokens[IDX]
 		IDX++
-		identToken := tokens[IDX-1]
 		return NewIdentExp(identToken.ValueStr), nil
+
+	} else if currentType == TokenOp {
+		signPart := tokens[IDX]
+		IDX++
+		numberPart, err := parseExpression(tokens)
+		if nil != err {
+			return nil, stacktrace.Propagate(err,
+				"could not parse number part after %s at index %d", signPart.ValueStr, IDX)
+		}
+		// allowing negative numbers
+		if signPart.ValueStr == "-" {
+			if numberPart.Type() == IntNode {
+				intNode := numberPart.(*IntLiteral)
+				return NewIntLiteral(-1 * intNode.Value), nil
+
+			} else if numberPart.Type() == FloatNode {
+				floatNode := numberPart.(*FloatLiteral)
+				return NewFloatLiteral(-1 * floatNode.Value), nil
+			}
+			return nil, stacktrace.NewError("Cannot invert sign of node %s at %d", numberPart.String(), IDX)
+		}
 	}
 	// not a literal, attempt to parse an expression
 	lparenError := expect(tokens, TokenLParen)
@@ -275,13 +296,13 @@ func parseExpressions(tokens []*Token) ([]AstNode, error) {
 		if nil != err {
 			// TODO вопсроизводится на TestLambdaExp и
 			/*
-						  (define foo 5)
-				    (define (fact n)
-				        (if (= n 0)
-				            1
-				            (* n (fact (- n 1)))))
+				        (define foo 5)
+					    (define (fact n)
+					        (if (= n 0)
+					            1
+					            (* n (fact (- n 1)))))
 
-				    (display (fact foo))
+					    (display (fact foo))
 			*/
 			IDX = 40
 			break

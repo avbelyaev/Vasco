@@ -63,9 +63,9 @@ func TestEqExp(t *testing.T) {
 }
 
 func TestStringLiteralExp(t *testing.T) {
-	tokens := LexExp("(+ \"la li \" \"lu le lo\")")
+	tokens := LexExp("(+ \"bi ba \" \"bo ba\")")
 	program, _ := ParseTokens(tokens)
-	expectedProgram := NewProgram(NewAddExp(NewStringLiteral("la li "), NewStringLiteral("lu le lo")))
+	expectedProgram := NewProgram(NewAddExp(NewStringLiteral("bi ba "), NewStringLiteral("bo ba")))
 	checkProgram(program, expectedProgram, t)
 }
 
@@ -87,6 +87,13 @@ func TestDefineExp(t *testing.T) {
 	tokens := LexExp("(define x 5)")
 	program, _ := ParseTokens(tokens)
 	expectedProgram := NewProgram(NewDefExp("x", NewIntLiteral(5), Variable))
+	checkProgram(program, expectedProgram, t)
+}
+
+func TestDefineExpWithNegativeNumber(t *testing.T) {
+	tokens := LexExp("(define x -5)")
+	program, _ := ParseTokens(tokens)
+	expectedProgram := NewProgram(NewDefExp("x", NewIntLiteral(-5), Variable))
 	checkProgram(program, expectedProgram, t)
 }
 
