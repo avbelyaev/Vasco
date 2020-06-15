@@ -57,9 +57,9 @@ Before:
 ```
 (define foo 5)
 (define (fact n)
-    (if (= n 0)
-        1
-        (* n (fact (- n 1)))))
+  (cond 
+    ((= n 0) 1)
+    (else (* n (fact (- n 1))))))
 
 (display (fact foo))
 ```
