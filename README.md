@@ -93,7 +93,7 @@ go run go-generator/main/generator.go go-generator/main/lexer.go go-generator/ma
 ```
   
 - convert generated WAT (WebAssembly Text Format) to WASM (binary) via WABT (WASM Binary Toolkit):
-   - it will replace existing example of module.wasm
+   - it will replace existing example of module.wasm (with fact)
    - or use [online converter](https://webassembly.github.io/wabt/demo/wat2wasm) 
 ```bash
 docker run -it --rm -u $(id -u):$(id -g) -v $PWD:/src -w /src jungomi/wabt wat2wasm server/module.wat -o server/module.wasm
